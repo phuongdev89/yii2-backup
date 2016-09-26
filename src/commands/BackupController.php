@@ -114,7 +114,4 @@ class BackupController extends Controller {
 			}
 		}
 	}
-
-	public function actionTest() {
-	}
 }
