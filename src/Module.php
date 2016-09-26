@@ -7,75 +7,121 @@
  */
 namespace navatech\backup;
 
+use navatech\backup\transports\Ftp;
+use navatech\backup\transports\Mail;
 use Yii;
-use yii\mail\BaseMailer;
+use yii\console\Application as ConsoleApplication;
+use yii\helpers\ArrayHelper;
 
+/**
+ * @property Mail $mail
+ * @property Ftp  $ftp
+ */
 class Module extends \navatech\base\Module {
 
-	public $controllerNamespace = 'navatech\backup\controllers';
+	const TYPE_DB     = 'db';
 
-	public $backupPath          = '@runtime/backup';
+	const TYPE_FOLDER = 'folder';
 
-	public $ftp                 = [
-		'enable' => true,
-		'config' => [
-			'directory' => '',
-			'host'      => '',
-			'port'      => '',
-			'login'     => '',
-			'password'  => '',
-		],
-	];
+	public $defaultRoute = 'all/index';
 
-	public $mail                = [
-		'enable' => true,
-		'config' => [
-			'fromEmail' => '',
-			'toEmail'   => '',
-		],
-	];
+	public $backupPath   = '@runtime/backup';
 
-	public $db                  = [
-		'enable' => true,
-		'config' => [
-			'db',
-		],
-	];
+	public $transport    = [];
 
-	public $folder              = [
-		'enable' => true,
-		'config' => [
-			'@app/web/uploads',
-		],
-	];
+	public $backup       = [];
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public function init() {
 		parent::init();
+		if (\Yii::$app instanceof ConsoleApplication) {
+			$this->controllerNamespace = 'navatech\backup\commands';
+		} else {
+			$this->controllerNamespace = 'navatech\backup\controllers';
+		}
 		$this->backupPath = Yii::getAlias($this->backupPath);
 		if (!file_exists($this->backupPath)) {
 			mkdir($this->backupPath, 0777, true);
 		}
+		$this->backup    = ArrayHelper::merge([
+			'db'     => [
+				'enable' => true,
+				'data'   => [
+					'db',
+				],
+			],
+			'folder' => [
+				'enable' => false,
+				'data'   => [
+					'@app/web/uploads',
+				],
+			],
+		], $this->backup);
+		$this->transport = ArrayHelper::merge([
+			'mail' => [
+				'class'     => '\navatech\backup\components\Mail',
+				'enable'    => true,
+				'fromEmail' => 'support@email.com',
+				'toEmail'   => 'backup@email.com',
+			],
+			'ftp'  => [
+				'class'      => '\navatech\backup\components\Ftp',
+				'enable'     => false,
+				'host'       => '',
+				'port'       => 21,
+				'ssl'        => false,
+				'user'       => '',
+				'pass'       => '',
+				'dir'        => '',
+				'timeOut'    => 90,
+				'appendTime' => true,
+			],
+		], $this->transport);
 	}
 
 	/**
-	 * @param $sqlFile
-	 *
 	 * @return bool
 	 */
-	public static function sendEmail($sqlFile) {
-		/**@var Module $module */
-		$module = Yii::$app->module;
-		/**@var BaseMailer $mailer */
-		$mailer           = Yii::$app->mailer;
-		$mailer->viewPath = '@vendor/navatech/yii2-backup/src/views/mail';
-		return $mailer->compose('backup')
-			->setFrom([$module->mail->config->fromEmail => Yii::$app->name])
-			->setTo($module->mail->config->toEmail)
-			->setSubject(Yii::$app->name)
-			->attach($sqlFile)
-			->send();
+	public function backupDbEnable() {
+		return $this->backup['db']['enable'];
+	}
+
+	/**
+	 * @return array
+	 */
+	public function backupDbData() {
+		return array_unique($this->backup['db']['data']);
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function backupFolderEnable() {
+		return $this->backup['folder']['enable'];
+	}
+
+	/**
+	 * @return array
+	 */
+	public function backupFolderData() {
+		return array_unique($this->backup['folder']['data']);
+	}
+
+	/**
+	 * @return Mail
+	 */
+	public function getMail() {
+		$mailClass = $this->transport['mail']['class'];
+		return new $mailClass($this->transport['mail']);
+	}
+
+	/**
+	 * @return Ftp
+	 */
+	public function getFtp() {
+		$ftpClass = $this->transport['ftp']['class'];
+		return new $ftpClass($this->transport['ftp']);
 	}
 }

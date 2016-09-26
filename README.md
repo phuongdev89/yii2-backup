@@ -25,7 +25,11 @@ to the require section of your `composer.json` file.
 Usage
 -----
 
-Once the extension is installed, simply use it in your code by  :
-
-```php
-<?= \navatech\backup\AutoloadExample::widget(); ?>```
+In console configure:
+```[php]
+'components' => [
+    'backup' => [
+        'class' => 'navatech\backup\Backup',
+    ],
+]
+```

@@ -8,32 +8,30 @@ namespace navatech\backup\helpers;
 
 use navatech\backup\Module;
 use Yii;
-use yii\base\Object;
+use yii\db\Command;
 use yii\db\Exception;
 
-class MysqlBackup extends Object {
+class MysqlHelper {
 
-	/**
-	 * @var Module $module
-	 */
-	protected $module;
+	public    $menu   = [];
 
-	public    $menu           = [];
-
-	public    $tables         = [];
+	public    $tables = [];
 
 	public    $fp;
 
 	public    $file_name;
 
-	public    $back_temp_file = 'db_backup_';
+	protected $db     = 'db';
 
 	/**
-	 * {@inheritDoc}
+	 * Constructor
+	 *
+	 * @param string $db
 	 */
-	public function init() {
-		parent::init();
-		$this->module = Yii::$app->module;
+	public function __construct($db = null) {
+		if ($db != null) {
+			$this->db = $db;
+		}
 	}
 
 	/**
@@ -42,10 +40,11 @@ class MysqlBackup extends Object {
 	 * @return string
 	 */
 	public function execSqlFile($sqlFile) {
+		/**@var Command $cmd */
 		$message = "ok";
 		if (file_exists($sqlFile)) {
 			$sqlArray = file_get_contents($sqlFile);
-			$cmd      = Yii::$app->db->createCommand($sqlArray);
+			$cmd      = Yii::$app->{$this->db}->createCommand($sqlArray);
 			try {
 				$cmd->execute();
 			} catch (Exception $e) {
@@ -61,8 +60,9 @@ class MysqlBackup extends Object {
 	 * @return mixed|string
 	 */
 	public function getColumns($tableName) {
+		/**@var Command $cmd */
 		$sql          = 'SHOW CREATE TABLE ' . $tableName;
-		$cmd          = Yii::$app->db->createCommand($sql);
+		$cmd          = Yii::$app->{$this->db}->createCommand($sql);
 		$table        = $cmd->queryOne();
 		$create_query = $table['Create Table'] . ';';
 		$create_query = preg_replace('/^CREATE TABLE/', 'CREATE TABLE IF NOT EXISTS', $create_query);
@@ -71,6 +71,7 @@ class MysqlBackup extends Object {
 			$this->writeComment('TABLE `' . addslashes($tableName) . '`');
 			$final = 'DROP TABLE IF EXISTS `' . addslashes($tableName) . '`;' . PHP_EOL . $create_query . PHP_EOL . PHP_EOL;
 			fwrite($this->fp, $final);
+			return true;
 		} else {
 			$this->tables[$tableName]['create'] = $create_query;
 			return $create_query;
@@ -83,8 +84,9 @@ class MysqlBackup extends Object {
 	 * @return null|string
 	 */
 	public function getData($tableName) {
+		/**@var Command $cmd */
 		$sql         = 'SELECT * FROM ' . $tableName;
-		$cmd         = Yii::$app->db->createCommand($sql);
+		$cmd         = Yii::$app->{$this->db}->createCommand($sql);
 		$dataReader  = $cmd->query();
 		$data_string = '';
 		foreach ($dataReader as $data) {
@@ -107,6 +109,7 @@ class MysqlBackup extends Object {
 			$this->writeComment('TABLE DATA ' . $tableName);
 			$final = $data_string . PHP_EOL . PHP_EOL . PHP_EOL;
 			fwrite($this->fp, $final);
+			return true;
 		} else {
 			$this->tables[$tableName]['data'] = $data_string;
 			return $data_string;
@@ -114,13 +117,12 @@ class MysqlBackup extends Object {
 	}
 
 	/**
-	 * @param null $dbName
-	 *
 	 * @return array
 	 */
-	public function getTables($dbName = null) {
+	public function getTables() {
+		/**@var Command $cmd */
 		$sql    = 'SHOW TABLES';
-		$cmd    = Yii::$app->db->createCommand($sql);
+		$cmd    = Yii::$app->{$this->db}->createCommand($sql);
 		$tables = $cmd->queryColumn();
 		return $tables;
 	}
@@ -131,7 +133,9 @@ class MysqlBackup extends Object {
 	 * @return bool
 	 */
 	public function StartBackup($addCheck = true) {
-		$this->file_name = $this->module->backupPath . $this->back_temp_file . date('Y.m.d_H.i.s') . '.sql';
+		/**@var Module $module */
+		$module          = Yii::$app->getModule('backup');
+		$this->file_name = $module->backupPath . DIRECTORY_SEPARATOR . $this->db . '_' . date('Y.m.d_H.i.s') . '.sql';
 		$this->fp        = fopen($this->file_name, 'w+');
 		if ($this->fp == null) {
 			return false;
