@@ -1,0 +1,21 @@
+{
+    "name": "navatech/yii2-backup",
+    "description": "Yii2 backup module",
+    "type": "yii2-extension",
+    "keywords": ["navatech","backup","yii2","extension"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Le Phuong",
+            "email": "phuong17889@gmail.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "navatech\\backup\\": ""
+        }
+    }
+}
