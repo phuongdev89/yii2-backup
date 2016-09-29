@@ -33,39 +33,41 @@ In console configure:
     ],
 ],
 'modules'             => [
-    'backup'    => [
-        'db'     => [
-            'enable' => true,
-            'data'   => [ //TODO List of database which need to be backed up
-                'db',
-                'db1',
+    'backup' => [
+        'backup'    => [
+            'db'     => [
+                'enable' => true,
+                'data'   => [ //TODO List of database which need to be backed up
+                    'db',
+                    'db1',
+                ],
+            ],
+            'folder' => [
+                'enable' => false,
+                'data'   => [ //TODO List of directories which need to be backed up
+                    '@app/web/uploads',
+                    '@backend/web/uploads',
+                ],
             ],
         ],
-        'folder' => [
-            'enable' => false,
-            'data'   => [ //TODO List of directories which need to be backed up
-                '@app/web/uploads',
-                '@backend/web/uploads',
+        'transport' => [
+            'mail' => [
+                'class'     => '\navatech\backup\transports\Mail',
+                'enable'    => true, //TODO default true
+                'fromEmail' => 'support@gmail.com',
+                'toEmail'   => 'backup@gmail.com',
+            ],
+            'ftp'  => [
+                'class'  => '\navatech\backup\transports\Ftp',
+                'enable' => false, //TODO default false
+                'host'   => 'ftp.example.com',
+                'user'   => 'login',
+                'pass'   => 'password',
+                'dir'    => '/home/example/public_html/backup',
             ],
         ],
     ],
-    'transport' => [
-        'mail' => [
-            'class'     => '\navatech\backup\transports\Mail',
-            'enable'    => true, //TODO default true
-            'fromEmail' => 'support@gmail.com',
-            'toEmail'   => 'backup@gmail.com',
-        ],
-        'ftp'  => [
-            'class'  => '\navatech\backup\transports\Ftp',
-            'enable' => false, //TODO default false
-            'host'   => 'ftp.example.com',
-            'user'   => 'login',
-            'pass'   => 'password',
-            'dir'    => '/home/example/public_html/backup',
-        ],
-    ],
-],
+]
 ```
 How to use in command line:
 ```
