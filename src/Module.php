@@ -40,6 +40,7 @@ class Module extends \navatech\base\Module {
 			$this->controllerNamespace = 'navatech\backup\commands';
 		} else {
 			$this->controllerNamespace = 'navatech\backup\controllers';
+			$this->defaultRoute        = 'default/index';
 		}
 		$this->backupPath = Yii::getAlias($this->backupPath);
 		if (!file_exists($this->backupPath)) {
@@ -61,13 +62,13 @@ class Module extends \navatech\base\Module {
 		], $this->backup);
 		$this->transport = ArrayHelper::merge([
 			'mail' => [
-				'class'     => '\navatech\backup\components\Mail',
+				'class'     => '\navatech\backup\transports\Mail',
 				'enable'    => true,
 				'fromEmail' => 'support@email.com',
 				'toEmail'   => 'backup@email.com',
 			],
 			'ftp'  => [
-				'class'      => '\navatech\backup\components\Ftp',
+				'class'      => '\navatech\backup\transports\Ftp',
 				'enable'     => false,
 				'host'       => '',
 				'port'       => 21,

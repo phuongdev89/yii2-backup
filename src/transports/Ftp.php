@@ -45,20 +45,22 @@ class Ftp extends Base {
 				$this->$key = $value;
 			}
 		}
-		try {
-			$this->client = new FtpClient();
-			$this->client->connect($this->host, $this->ssl, $this->port, $this->timeOut);
-			$this->client->pasv(true);
-			$this->client->login($this->user, $this->pass);
-			if ($this->appendTime) {
-				$this->dir .= DIRECTORY_SEPARATOR . date('Y-m-d');
+		if ($this->enable) {
+			try {
+				$this->client = new FtpClient();
+				$this->client->connect($this->host, $this->ssl, $this->port, $this->timeOut);
+				$this->client->pasv(true);
+				$this->client->login($this->user, $this->pass);
+				if ($this->appendTime) {
+					$this->dir .= DIRECTORY_SEPARATOR . date('Y-m-d');
+				}
+				if (!$this->client->isDir($this->dir)) {
+					$this->client->mkdir($this->dir);
+				}
+				$this->client->chdir($this->dir);
+			} catch (ErrorException $e) {
+				echo "Can not create folder. Make sure folder is existed" . PHP_EOL;
 			}
-			if (!$this->client->isDir($this->dir)) {
-				$this->client->mkdir($this->dir);
-			}
-			$this->client->chdir($this->dir);
-		} catch (ErrorException $e) {
-			echo "Can not create folder. Make sure folder is existed" . PHP_EOL;
 		}
 	}
 
