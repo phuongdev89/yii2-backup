@@ -34,6 +34,7 @@ In console configure:
 ],
 'modules'             => [
     'backup' => [
+        'class'     => 'navatech\backup\Module',
         'backup'    => [
             'db'     => [
                 'enable' => true,
