@@ -35,6 +35,7 @@ In console configure:
 'modules'             => [
     'backup' => [
         'class'     => 'navatech\backup\Module',
+        'clear'     => 3, //TODO clear if db more than 3 days old.
         'backup'    => [
             'db'     => [
                 'enable' => true,

@@ -5,6 +5,7 @@
  * Date: 9/26/16
  * Time: 10:46 AM
  */
+
 namespace navatech\backup;
 
 use navatech\backup\transports\Ftp;
@@ -30,6 +31,8 @@ class Module extends \navatech\base\Module {
 	public $transport    = [];
 
 	public $backup       = [];
+
+	public $clear        = 3;
 
 	/**
 	 * {@inheritDoc}
@@ -62,22 +65,10 @@ class Module extends \navatech\base\Module {
 		], $this->backup);
 		$this->transport = ArrayHelper::merge([
 			'mail' => [
-				'class'     => '\navatech\backup\transports\Mail',
-				'enable'    => true,
-				'fromEmail' => 'support@email.com',
-				'toEmail'   => 'backup@email.com',
+				'class' => '\navatech\backup\transports\Mail',
 			],
 			'ftp'  => [
-				'class'      => '\navatech\backup\transports\Ftp',
-				'enable'     => false,
-				'host'       => '',
-				'port'       => 21,
-				'ssl'        => false,
-				'user'       => '',
-				'pass'       => '',
-				'dir'        => '',
-				'timeOut'    => 90,
-				'appendTime' => true,
+				'class' => '\navatech\backup\transports\Ftp',
 			],
 		], $this->transport);
 	}

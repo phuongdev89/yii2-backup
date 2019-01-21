@@ -5,6 +5,7 @@
  * Date: 9/26/16
  * Time: 9:43 PM
  */
+
 namespace navatech\backup\commands;
 
 use navatech\backup\helpers\MysqlHelper;
@@ -12,6 +13,7 @@ use navatech\backup\Module;
 use PharData;
 use Yii;
 use yii\console\Controller;
+use yii\helpers\Console;
 
 /**
  * @property Module $module
@@ -68,26 +70,37 @@ class BackupController extends Controller {
 			if ($db != null) {
 				$dbs = [$db];
 			}
+			Console::output('Starting backup database.');
 			foreach ($dbs as $db) {
+				Console::output('Backing up `' . $db . '`');
+				Console::startProgress(0, 100);
 				$sql    = new MysqlHelper($db);
 				$tables = $sql->getTables();
 				if (!$sql->StartBackup()) {
 					die;
 				}
-				foreach ($tables as $tableName) {
+				foreach ($tables as $tableKey => $tableName) {
+					Console::updateProgress(($tableKey + 1) / 2, count($tables));
 					$sql->getColumns($tableName);
 				}
 				foreach ($tables as $tableName) {
+					Console::updateProgress(count($tables) / 2 + ($tableKey + 1) / 2, count($tables));
 					$sql->getData($tableName);
 				}
 				$sqlFile = $sql->EndBackup();
 				if ($module->mail->enable) {
-					$module->mail->setFile($sqlFile)->setType(Module::TYPE_DB)->send();
+					if (filesize($sqlFile) < 20 * 1024 * 1024) {
+						$module->mail->setFile($sqlFile)->setType(Module::TYPE_DB)->send();
+					} else {
+						Console::output('Can not attach filesize > 20MB.');
+					}
 				}
 				if ($module->ftp->enable) {
 					$module->ftp->setFile($sqlFile)->push();
 				}
-				echo 'Backup success!' . PHP_EOL;
+				Console::endProgress(true, false);
+				Console::output();
+				Console::output('Backed up `' . $db . '`');
 			}
 		} else {
 			echo 'DB Backup not enable!' . PHP_EOL;
