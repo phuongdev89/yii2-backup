@@ -8,6 +8,7 @@
 
 namespace navatech\backup\transports;
 
+use navatech\backup\Module;
 use Yii;
 use yii\base\BaseObject;
 use yii\base\ErrorException;
@@ -41,6 +42,9 @@ class Ftp extends BaseObject {
 
 	/**
 	 * @param array $config
+	 *
+	 * @throws \yii2mod\ftp\FtpException
+	 * @throws \yii\base\InvalidConfigException
 	 */
 	public function __construct($config = []) {
 		parent::__construct(null);
@@ -48,6 +52,13 @@ class Ftp extends BaseObject {
 			if ($this->hasProperty($key)) {
 				$this->$key = $value;
 			}
+		}
+		if (Module::hasSetting()) {
+			$this->enable = Yii::$app->setting->get('backup_ftp_enable', 1) == 1;
+			$this->host   = Yii::$app->setting->get('backup_ftp_host', '');
+			$this->port   = Yii::$app->setting->get('backup_ftp_port', 21);
+			$this->user   = Yii::$app->setting->get('backup_ftp_user', '');
+			$this->pass   = Yii::$app->setting->get('backup_ftp_pass', '');
 		}
 		if ($this->enable) {
 			try {
