@@ -8,6 +8,7 @@
 
 namespace navatech\backup;
 
+use navatech\backup\helpers\FileHelper;
 use navatech\backup\transports\Ftp;
 use navatech\backup\transports\Mail;
 use Yii;
@@ -20,19 +21,19 @@ use yii\helpers\ArrayHelper;
  */
 class Module extends \navatech\base\Module {
 
-	const TYPE_DB     = 'db';
+	const TYPE_DATABASE  = 'database';
 
-	const TYPE_FOLDER = 'folder';
+	const TYPE_DIRECTORY = 'directory';
 
-	public $defaultRoute = 'all/index';
+	public $defaultRoute  = 'default/index';
 
-	public $backupPath   = '@runtime/backup';
+	public $backupPath    = '@runtime/backup';
 
-	public $transport    = [];
+	public $transport     = [];
 
-	public $backup       = [];
+	public $backup        = [];
 
-	public $clear        = 3;
+	public $clearAfterDay = 3;
 
 	/**
 	 * {@inheritDoc}
@@ -50,17 +51,15 @@ class Module extends \navatech\base\Module {
 			mkdir($this->backupPath, 0777, true);
 		}
 		$this->backup    = ArrayHelper::merge([
-			'db'     => [
+			'database'  => [
 				'enable' => true,
 				'data'   => [
 					'db',
 				],
 			],
-			'folder' => [
+			'directory' => [
 				'enable' => false,
-				'data'   => [
-					'@app/web/uploads',
-				],
+				'data'   => [],
 			],
 		], $this->backup);
 		$this->transport = ArrayHelper::merge([
@@ -76,29 +75,29 @@ class Module extends \navatech\base\Module {
 	/**
 	 * @return bool
 	 */
-	public function backupDbEnable() {
-		return $this->backup['db']['enable'];
+	public function isDatabaseBackupEnable() {
+		return $this->backup[self::TYPE_DATABASE]['enable'];
 	}
 
 	/**
 	 * @return array
 	 */
-	public function backupDbData() {
-		return array_unique($this->backup['db']['data']);
+	public function backupDatabaseData() {
+		return array_unique($this->backup[self::TYPE_DATABASE]['data']);
 	}
 
 	/**
 	 * @return bool
 	 */
-	public function backupFolderEnable() {
-		return $this->backup['folder']['enable'];
+	public function isDirectoryBackupEnable() {
+		return $this->backup[self::TYPE_DIRECTORY]['enable'];
 	}
 
 	/**
 	 * @return array
 	 */
-	public function backupFolderData() {
-		return array_unique($this->backup['folder']['data']);
+	public function backupDirectoryData() {
+		return array_unique($this->backup[self::TYPE_DIRECTORY]['data']);
 	}
 
 	/**
@@ -115,5 +114,17 @@ class Module extends \navatech\base\Module {
 	public function getFtp() {
 		$ftpClass = $this->transport['ftp']['class'];
 		return new $ftpClass($this->transport['ftp']);
+	}
+
+	/**
+	 * Clean file
+	 */
+	public function clean() {
+		$list = FileHelper::findFiles($this->backupPath);
+		foreach ($list as $id => $filename) {
+			if (filectime($filename) < strtotime($this->clearAfterDay . ' days ago')) {
+				FileHelper::unlink($filename);
+			}
+		}
 	}
 }

@@ -5,15 +5,19 @@
  * Date: 9/26/16
  * Time: 10:17 PM
  */
+
 namespace navatech\backup\transports;
 
 use Yii;
+use yii\base\BaseObject;
 use yii\base\ErrorException;
 use yii\base\Exception;
 use yii\web\Application;
 use yii2mod\ftp\FtpClient;
 
-class Ftp extends Base {
+class Ftp extends BaseObject {
+
+	public  $enable     = false;
 
 	public  $host;
 

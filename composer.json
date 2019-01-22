@@ -16,10 +16,13 @@
 		}
 	],
 	"require" : {
+		"ext-ftp" : "*",
+		"ext-zip" : "*",
 		"yiisoft/yii2" : "*",
 		"yii2mod/yii2-ftp" : "^1.0",
+		"kartik-v/yii2-grid" : "3.2.*",
 		"navatech/yii2-email-manager" : "@dev",
-		"ext-ftp" : "*"
+		"kartik-v/yii2-date-range" : "@dev"
 	},
 	"autoload" : {
 		"psr-4" : {

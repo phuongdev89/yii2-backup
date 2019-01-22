@@ -5,13 +5,17 @@
  * Date: 9/26/16
  * Time: 10:14 PM
  */
+
 namespace navatech\backup\transports;
 
 use Yii;
+use yii\base\BaseObject;
 use yii\mail\BaseMailer;
 use yii\swiftmailer\Message;
 
-class Mail extends Base {
+class Mail extends BaseObject {
+
+	public $enable    = false;
 
 	public $fromEmail = 'support@gmail.com';
 
@@ -35,9 +39,7 @@ class Mail extends Base {
 		/**@var BaseMailer $mailer */
 		$mailer           = Yii::$app->mailer;
 		$mailer->viewPath = $this->viewPath;
-		$this->message    = $mailer->compose('backup')
-			->setFrom([$this->fromEmail => Yii::$app->name])
-			->setTo($this->toEmail);
+		$this->message    = $mailer->compose('backup')->setFrom([$this->fromEmail => Yii::$app->name])->setTo($this->toEmail);
 	}
 
 	/**

@@ -37,14 +37,14 @@ In console configure:
         'class'     => 'navatech\backup\Module',
         'clear'     => 3, //TODO clear if db more than 3 days old.
         'backup'    => [
-            'db'     => [
+            'database'     => [
                 'enable' => true,
                 'data'   => [ //TODO List of database which need to be backed up
                     'db',
                     'db1',
                 ],
             ],
-            'folder' => [
+            'directory' => [
                 'enable' => false,
                 'data'   => [ //TODO List of directories which need to be backed up
                     '@app/web/uploads',

@@ -4,24 +4,33 @@
  * createTime : 2015/6/29 19:43
  * description:
  */
-namespace navatech\backup\helpers;
 
+namespace navatech\backup\components;
+
+use navatech\backup\helpers\FileHelper;
 use navatech\backup\Module;
 use Yii;
+use yii\base\BaseObject;
 use yii\db\Command;
 use yii\db\Exception;
+use ZipArchive;
 
-class MysqlHelper {
+class MysqlBackup extends BaseObject {
 
-	public    $menu   = [];
+	private   $_path;
 
-	public    $tables = [];
+	public    $enableZip = true;
 
-	public    $fp;
+	protected $tables    = [];
 
-	public    $file_name;
+	protected $fp;
 
-	protected $db     = 'db';
+	protected $file_name;
+
+	protected $db        = 'db';
+
+	/**@var Module */
+	protected $module;
 
 	/**
 	 * Constructor
@@ -29,35 +38,18 @@ class MysqlHelper {
 	 * @param string $db
 	 */
 	public function __construct($db = null) {
+		parent::__construct();
 		if ($db != null) {
 			$this->db = $db;
 		}
-	}
-
-	/**
-	 * @param $sqlFile
-	 *
-	 * @return string
-	 */
-	public function execSqlFile($sqlFile) {
-		/**@var Command $cmd */
-		$message = "ok";
-		if (file_exists($sqlFile)) {
-			$sqlArray = file_get_contents($sqlFile);
-			$cmd      = Yii::$app->{$this->db}->createCommand($sqlArray);
-			try {
-				$cmd->execute();
-			} catch (Exception $e) {
-				$message = $e->getMessage();
-			}
-		}
-		return $message;
+		$this->module = Yii::$app->getModule('backup');
 	}
 
 	/**
 	 * @param $tableName
 	 *
 	 * @return mixed|string
+	 * @throws Exception
 	 */
 	public function getColumns($tableName) {
 		/**@var Command $cmd */
@@ -79,9 +71,19 @@ class MysqlHelper {
 	}
 
 	/**
+	 * @param $string
+	 */
+	public function writeComment($string) {
+		fwrite($this->fp, '-- -------------------------------------------' . PHP_EOL);
+		fwrite($this->fp, '-- ' . $string . PHP_EOL);
+		fwrite($this->fp, '-- -------------------------------------------' . PHP_EOL);
+	}
+
+	/**
 	 * @param $tableName
 	 *
 	 * @return null|string
+	 * @throws Exception
 	 */
 	public function getData($tableName) {
 		/**@var Command $cmd */
@@ -118,6 +120,7 @@ class MysqlHelper {
 
 	/**
 	 * @return array
+	 * @throws Exception
 	 */
 	public function getTables() {
 		/**@var Command $cmd */
@@ -132,10 +135,8 @@ class MysqlHelper {
 	 *
 	 * @return bool
 	 */
-	public function StartBackup($addCheck = true) {
-		/**@var Module $module */
-		$module          = Yii::$app->getModule('backup');
-		$this->file_name = $module->backupPath . DIRECTORY_SEPARATOR . $this->db . '_' . date('Y.m.d_H.i.s') . '.sql';
+	public function startBackup($addCheck = true) {
+		$this->file_name = $this->module->backupPath . DIRECTORY_SEPARATOR . Module::TYPE_DATABASE . '_' . date('Y.m.d_H.i.s') . '.sql';
 		$this->fp        = fopen($this->file_name, 'w+');
 		if ($this->fp == null) {
 			return false;
@@ -158,7 +159,7 @@ class MysqlHelper {
 	 *
 	 * @return mixed
 	 */
-	public function EndBackup($addCheck = true) {
+	public function endBackup($addCheck = true) {
 		fwrite($this->fp, '-- -------------------------------------------' . PHP_EOL);
 		fwrite($this->fp, 'SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;' . PHP_EOL);
 		fwrite($this->fp, 'SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;' . PHP_EOL);
@@ -169,15 +170,83 @@ class MysqlHelper {
 		$this->writeComment('END BACKUP');
 		fclose($this->fp);
 		$this->fp = null;
+		if ($this->enableZip) {
+			$this->createZipBackup();
+		}
 		return $this->file_name;
 	}
 
 	/**
-	 * @param $string
+	 * @param      $sql_file
+	 * @param bool $force_remove
+	 *
+	 * @return string
 	 */
-	public function writeComment($string) {
-		fwrite($this->fp, '-- -------------------------------------------' . PHP_EOL);
-		fwrite($this->fp, '-- ' . $string . PHP_EOL);
-		fwrite($this->fp, '-- -------------------------------------------' . PHP_EOL);
+	public function execSqlFile($sql_file, $force_remove = false) {
+		/**@var Command $cmd */
+		if (file_exists($sql_file)) {
+			$sqlArray = file_get_contents($sql_file);
+			$cmd      = Yii::$app->{$this->db}->createCommand($sqlArray);
+			try {
+				$cmd->execute();
+				if ($force_remove) {
+					FileHelper::unlink($sql_file);
+				}
+			} catch (Exception $e) {
+				return $e->getMessage();
+			}
+		} else {
+			return 'File not existed';
+		}
+		return true;
+	}
+
+	/**
+	 * Zip file execution
+	 *
+	 * @param $sqlZipFile
+	 *
+	 * @return mixed
+	 */
+	public function unzip($sqlZipFile) {
+		if (file_exists($sqlZipFile)) {
+			$zip    = new ZipArchive();
+			$result = $zip->open($sqlZipFile);
+			if ($result === true) {
+				$zip->extractTo(dirname($sqlZipFile));
+				$zip->close();
+				$sqlZipFile = str_replace(".zip", "", $sqlZipFile);
+			}
+		}
+		return $sqlZipFile;
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function getPath() {
+		$this->_path = Yii::$app->basePath . '/db/';
+		if (!file_exists($this->_path)) {
+			@mkdir($this->_path, 0775, true);
+		}
+		return $this->_path;
+	}
+
+	/**
+	 * Charge method to backup and create a zip with this
+	 */
+	private function createZipBackup() {
+		if (class_exists(ZipArchive::class)) {
+			$zip       = new ZipArchive();
+			$file_name = $this->file_name . '.zip';
+			if ($zip->open($file_name, ZipArchive::CREATE) === true) {
+				$zip->addFile($this->file_name, basename($this->file_name));
+				$zip->close();
+				@unlink($this->file_name);
+				$this->file_name = $file_name;
+			}
+		} else {
+			echo "ZipArchive missing class ";
+		}
 	}
 }
