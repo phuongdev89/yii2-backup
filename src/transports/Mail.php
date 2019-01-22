@@ -25,8 +25,10 @@ class Mail extends BaseObject {
 
 	public $viewPath  = '@vendor/navatech/yii2-backup/src/views/mail';
 
-	/**@var Message */
+	/**@var EmailTemplate|Message */
 	private $message;
+
+	private $mailerParams = [];
 
 	/**
 	 * @param array $config
@@ -48,10 +50,11 @@ class Mail extends BaseObject {
 		/**@var BaseMailer $mailer */
 		$mailer = Yii::$app->mailer;
 		if (Yii::$app->hasModule('mailer') && Yii::$app->getModule('mailer') instanceof \navatech\email\Module) {
-			$email            = EmailTemplate::findByShortcut('backup');
-			$email->from      = $this->fromEmail;
-			$mailer->viewPath = false;
-			$this->message    = $mailer->compose($email->renderAttribute('text', []))->setFrom([$this->fromEmail => Yii::$app->name])->setTo($this->toEmail);
+			$email                    = EmailTemplate::findByShortcut('backup');
+			$email->from              = $this->fromEmail;
+			$mailer->viewPath         = false;
+			$this->mailerParams['to'] = $this->toEmail;
+			$this->message            = $email;
 		} else {
 			$mailer->viewPath = $this->viewPath;
 			$this->message    = $mailer->compose('backup')->setFrom([$this->fromEmail => Yii::$app->name])->setTo($this->toEmail);
@@ -60,9 +63,14 @@ class Mail extends BaseObject {
 
 	/**
 	 * @return bool
+	 * @throws \yii\base\InvalidConfigException
 	 */
 	public function send() {
-		return $this->message->send();
+		if ($this->mailerParams != null) {
+			return $this->message->send($this->mailerParams['to'], [], [$this->mailerParams['file']]);
+		} else {
+			return $this->message->send();
+		}
 	}
 
 	/**
@@ -71,7 +79,11 @@ class Mail extends BaseObject {
 	 * @return $this
 	 */
 	public function setFile($file) {
-		$this->message->attach($file);
+		if ($this->mailerParams != null) {
+			$this->mailerParams['file'] = $file;
+		} else {
+			$this->message->attach($file);
+		}
 		return $this;
 	}
 
@@ -81,7 +93,9 @@ class Mail extends BaseObject {
 	 * @return $this
 	 */
 	public function setType($type) {
-		$this->message->setSubject(Yii::$app->name . ' | Backup ' . $type);
+		if ($this->mailerParams == null) {
+			$this->message->setSubject(Yii::$app->name . ' | Backup ' . $type);
+		}
 		return $this;
 	}
 }

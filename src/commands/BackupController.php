@@ -24,6 +24,11 @@ class BackupController extends Controller {
 	/**@var Module */
 	public $module;
 
+	public function __construct($id, $module, array $config = []) {
+		$this->module = Yii::$app->getModule('backup');
+		parent::__construct($id, $this->module, $config);
+	}
+
 	/**
 	 * @param \yii\base\Action $action
 	 *
