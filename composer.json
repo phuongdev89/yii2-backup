@@ -22,11 +22,15 @@
 		"yii2mod/yii2-ftp" : "^1.0",
 		"kartik-v/yii2-grid" : "3.2.*",
 		"navatech/yii2-email-manager" : "@dev",
-		"kartik-v/yii2-date-range" : "@dev"
+		"kartik-v/yii2-date-range" : "@dev",
+		"kartik-v/yii2-tabs-x" : "@dev"
 	},
 	"autoload" : {
 		"psr-4" : {
 			"navatech\\backup\\" : "src"
 		}
+	},
+	"extra" : {
+		"bootstrap" : "navatech\\backup\\Bootstrap"
 	}
 }

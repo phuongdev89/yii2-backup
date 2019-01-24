@@ -22,7 +22,6 @@ $this->params ['breadcrumbs'] [] = [
 ];
 ?>
 <div class="backup-default-index">
-
 	<p>
 		<a data-toggle="modal" href="#create-database" class="btn btn-primary"><i class="glyphicon glyphicon-duplicate"></i> Backup database</a>
 		<a href="<?= Url::to(['/backup/default/create-directory']) ?>" class="btn btn-success" data-confirm="This may take a few minutes. Do you want to continue?"><i class="glyphicon glyphicon-folder-open"></i> Backup directory</a>
@@ -67,6 +66,20 @@ $this->params ['breadcrumbs'] [] = [
 			</div><!-- /.modal-content -->
 		</div><!-- /.modal-dialog -->
 	</div><!-- /.modal -->
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="info-box">
+				<span class="info-box-icon bg-aqua"><i class="fa fa-spinner fa-spin"></i></span>
+
+				<div class="info-box-content">
+					<span class="info-box-text">Messages</span>
+					<span class="info-box-number">1,410</span>
+				</div>
+				<!-- /.info-box-content -->
+			</div>
+			<!-- /.info-box -->
+		</div>
+	</div>
 	<?php
 	Pjax::begin();
 	echo GridView::widget([
@@ -189,7 +202,6 @@ $this->params ['breadcrumbs'] [] = [
 </div>
 <script>
 	$(document).on('change', '#schema-all', function() {
-		console.log('aaaa');
 		if($(this).is(':checked')) {
 			$('[data-checkbox="schema"]').find('input[type="checkbox"]').prop('checked', true);
 		} else {
@@ -212,4 +224,21 @@ $this->params ['breadcrumbs'] [] = [
 			$('[data-checkbox="schema"]').find('input[type="checkbox"]').prop('checked', false);
 		}
 	});
+	progress();
+
+	function progress() {
+		$.ajax({
+			method  : 'GET',
+			url     : '<?=Url::to(['/backup/default/percent'])?>',
+			dataType: 'json',
+			success : function(response) {
+				// if(response.error === 0) {
+				$('.info-box-number').html(response.message);
+				setTimeout(function() {
+					progress();
+				}, 5000)
+				// }
+			}
+		});
+	}
 </script>

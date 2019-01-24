@@ -13,7 +13,7 @@ use navatech\backup\transports\Ftp;
 use navatech\backup\transports\Mail;
 use Yii;
 use yii\console\Application as ConsoleApplication;
-use yii\helpers\ArrayHelper;
+use yii\web\NotFoundHttpException;
 
 /**
  * @property Mail $mail
@@ -29,14 +29,33 @@ class Module extends \navatech\base\Module {
 
 	public $backupPath    = '@runtime/backup';
 
-	public $transport     = [];
+	public $transport     = [
+		'mail' => [
+			'class' => '\navatech\backup\transports\Mail',
+		],
+		'ftp'  => [
+			'class' => '\navatech\backup\transports\Ftp',
+		],
+	];
 
-	public $backup        = [];
+	public $backup        = [
+		'database'  => [
+			'enable' => true,
+			'data'   => [
+				'db',
+			],
+		],
+		'directory' => [
+			'enable' => false,
+			'data'   => [],
+		],
+	];
 
 	public $clearAfterDay = 3;
 
 	/**
 	 * {@inheritDoc}
+	 * @throws NotFoundHttpException
 	 */
 	public function init() {
 		parent::init();
@@ -50,26 +69,9 @@ class Module extends \navatech\base\Module {
 		if (!file_exists($this->backupPath)) {
 			mkdir($this->backupPath, 0777, true);
 		}
-		$this->backup    = ArrayHelper::merge([
-			'database'  => [
-				'enable' => true,
-				'data'   => [
-					'db',
-				],
-			],
-			'directory' => [
-				'enable' => false,
-				'data'   => [],
-			],
-		], $this->backup);
-		$this->transport = ArrayHelper::merge([
-			'mail' => [
-				'class' => '\navatech\backup\transports\Mail',
-			],
-			'ftp'  => [
-				'class' => '\navatech\backup\transports\Ftp',
-			],
-		], $this->transport);
+		if (isset($this->transport['s3']) && !class_exists(\S3::class)) {
+			throw new NotFoundHttpException('S3 does not exist. Please add to composer.json <code>"tpyo/amazon-s3-php-class" : "@dev"</code>');
+		}
 	}
 
 	/**

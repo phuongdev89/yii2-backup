@@ -32,7 +32,9 @@ class DefaultController extends Controller {
 	public $enableZip = true;
 
 	/**@var Module */
-	public $module;
+	public  $module;
+
+	private $progress_message = null;
 
 	/**
 	 * @param \yii\base\Action $action
@@ -103,14 +105,17 @@ class DefaultController extends Controller {
 				Yii::$app->session->setFlash('error', "Error");
 				return $this->redirect(['index']);
 			}
+			$this->progress_message = 'Backup started!';
 			foreach ($tables as $tableName) {
 				if (isset($post['table'][$tableName]['schema']) && $post['table'][$tableName]['schema'] == 1) {
 					$sql->getColumns($tableName);
+					$this->progress_message = 'table ' . $tableName;
 				}
 			}
 			foreach ($tables as $tableName) {
 				if (isset($post['table'][$tableName]['data']) && $post['table'][$tableName]['data'] == 1) {
 					$sql->getData($tableName);
+					$this->progress_message = 'data ' . $tableName;
 				}
 			}
 			$sql->endBackup();
@@ -241,5 +246,15 @@ class DefaultController extends Controller {
 		header('Content-Disposition: attachment; filename=' . basename($file));
 		header('Pragma: no-cache');
 		readfile($this->module->backupPath . DIRECTORY_SEPARATOR . basename($file));
+	}
+
+	public function actionPercent($type = Module::TYPE_DATABASE) {
+		Yii::$app->response->format = 'json';
+		//		if ($this->progress_message != null) {
+		return [
+			'error'   => 0,
+			'message' => $this->progress_message,
+		];
+		//		}
 	}
 }

@@ -27,7 +27,7 @@ class MysqlBackup extends BaseObject {
 
 	protected $file_name;
 
-	protected $db        = 'db';
+	public    $db        = 'db';
 
 	/**@var Module */
 	protected $module;
@@ -35,14 +35,21 @@ class MysqlBackup extends BaseObject {
 	/**
 	 * Constructor
 	 *
-	 * @param string $db
+	 * @param null $config
 	 */
-	public function __construct($db = null) {
-		parent::__construct();
-		if ($db != null) {
-			$this->db = $db;
+	public function __construct($config = null) {
+		parent::__construct($config);
+		if (isset($config['db']) && $config['db'] != null) {
+			$this->db = $config['db'];
 		}
 		$this->module = Yii::$app->getModule('backup');
+	}
+
+	/**
+	 * @return string|null
+	 */
+	public function getName() {
+		return $this->db;
 	}
 
 	/**

@@ -51,7 +51,6 @@ class Mail extends BaseObject {
 		$mailer = Yii::$app->mailer;
 		if (Yii::$app->hasModule('mailer') && Yii::$app->getModule('mailer') instanceof \navatech\email\Module) {
 			$email                    = EmailTemplate::findByShortcut('backup');
-			$email->from              = $this->fromEmail;
 			$mailer->viewPath         = false;
 			$this->mailerParams['to'] = $this->toEmail;
 			$this->message            = $email;
