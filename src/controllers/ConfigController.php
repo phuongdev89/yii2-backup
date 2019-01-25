@@ -31,46 +31,43 @@ class ConfigController extends Controller {
 		if (isset($_POST[BackupConfig::TYPE_TRANSPORT])) {
 			foreach ($_POST[BackupConfig::TYPE_TRANSPORT] as $keyTransport => $postTransport) {
 				foreach ($postTransport as $name => $value) {
-					$backupConfig = BackupConfig::findOne(['name' => $keyTransport . '_' . $name]);
-					if ($backupConfig !== null) {
-						$backupConfig->updateAttributes(['value' => $value]);
-					}
+					$backupConfig = BackupConfig::getInstance($keyTransport . '_' . $name, BackupConfig::TYPE_TRANSPORT);
+					$backupConfig->updateAttributes(['value' => $value]);
 				}
 			}
-			Yii::$app->session->setFlash('success', 'Updated!');
+			Yii::$app->session->setFlash('success', 'Transport updated!');
 		}
 		if (isset($_POST[BackupConfig::TYPE_DATABASE])) {
-			$backupConfig = BackupConfig::findOne(['name' => 'database_config']);
-			if ($backupConfig === null) {
-				$backupConfig       = new BackupConfig();
-				$backupConfig->name = 'database_config';
-				$backupConfig->type = BackupConfig::TYPE_DATABASE;
-				$backupConfig->save();
-			}
-			$backupConfig->updateAttributes(['value' => Json::encode($_POST[BackupConfig::TYPE_DATABASE])]);
-			Yii::$app->session->setFlash('success', 'Updated!');
+			$backupEnable = BackupConfig::getInstance('database_enable', BackupConfig::TYPE_DATABASE);
+			$backupEnable->updateAttributes(['value' => $_POST[BackupConfig::TYPE_DATABASE]['enable']]);
+			$backupConfig = BackupConfig::getInstance('database_config', BackupConfig::TYPE_DATABASE);
+			$backupConfig->updateAttributes(['value' => Json::encode($_POST[BackupConfig::TYPE_DATABASE]['data'])]);
+			Yii::$app->session->setFlash('success', 'Database updated!');
 		}
 		if (isset($_POST[BackupConfig::TYPE_DIRECTORY])) {
-			$backupConfig = BackupConfig::findOne(['name' => 'directory_config']);
-			if ($backupConfig === null) {
-				$backupConfig       = new BackupConfig();
-				$backupConfig->name = 'directory_config';
-				$backupConfig->type = BackupConfig::TYPE_DIRECTORY;
-				$backupConfig->save();
+			$backupEnable = BackupConfig::getInstance('directory_enable', BackupConfig::TYPE_DIRECTORY);
+			$backupEnable->updateAttributes(['value' => $_POST[BackupConfig::TYPE_DIRECTORY]['enable']]);
+			$backupConfig = BackupConfig::getInstance('directory_config', BackupConfig::TYPE_DIRECTORY);
+			$backupConfig->updateAttributes(['value' => Json::encode($_POST[BackupConfig::TYPE_DIRECTORY]['data'])]);
+			Yii::$app->session->setFlash('success', 'Directory updated!');
+		}
+		if (isset($_POST[BackupConfig::TYPE_CRONJOB])) {
+			foreach ($_POST[BackupConfig::TYPE_CRONJOB] as $name => $value) {
+				$backupConfig = BackupConfig::getInstance($name, BackupConfig::TYPE_CRONJOB);
+				$backupConfig->updateAttributes(['value' => $value]);
 			}
-			$backupConfig->updateAttributes(['value' => Json::encode($_POST[BackupConfig::TYPE_DIRECTORY])]);
-			Yii::$app->session->setFlash('success', 'Updated!');
+			Yii::$app->session->setFlash('success', 'Cronjob updated!');
 		}
 		$databases = [];
-		if (isset($this->module->backup['database'])) {
-			foreach ($this->module->backup['database']['data'] as $datum) {
-				$databases[] = new MysqlBackup(['db' => $datum]);
+		if ($this->module->databases != null) {
+			foreach ($this->module->databases as $database) {
+				$databases[] = new MysqlBackup(['db' => $database]);
 			}
 		}
 		$directories = [];
-		if (isset($this->module->backup['directory'])) {
-			foreach ($this->module->backup['directory']['data'] as $datum) {
-				$iterator  = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(Yii::getAlias($datum)));
+		if ($this->module->directories != null) {
+			foreach ($this->module->directories as $directory) {
+				$iterator  = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(Yii::getAlias($directory)));
 				$totalSize = 0;
 				$count     = 0;
 				foreach ($iterator as $file) {
@@ -78,7 +75,7 @@ class ConfigController extends Controller {
 					$count ++;
 				}
 				$directories[] = [
-					'name'  => $datum,
+					'name'  => $directory,
 					'count' => $count,
 					'size'  => $totalSize,
 				];

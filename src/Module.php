@@ -9,9 +9,9 @@
 namespace navatech\backup;
 
 use navatech\backup\helpers\FileHelper;
+use navatech\backup\models\BackupConfig;
 use navatech\backup\transports\Ftp;
 use navatech\backup\transports\Mail;
-use Yii;
 use yii\console\Application as ConsoleApplication;
 use yii\web\NotFoundHttpException;
 
@@ -25,33 +25,23 @@ class Module extends \navatech\base\Module {
 
 	const TYPE_DIRECTORY = 'directory';
 
-	public $defaultRoute  = 'default/index';
+	public $defaultRoute = 'default/index';
 
-	public $backupPath    = '@runtime/backup';
-
-	public $transport     = [
+	public $transport    = [
 		'mail' => [
 			'class' => '\navatech\backup\transports\Mail',
 		],
 		'ftp'  => [
 			'class' => '\navatech\backup\transports\Ftp',
 		],
-	];
-
-	public $backup        = [
-		'database'  => [
-			'enable' => true,
-			'data'   => [
-				'db',
-			],
-		],
-		'directory' => [
-			'enable' => false,
-			'data'   => [],
+		's3'   => [
+			'class' => '\navatech\backup\transports\S3',
 		],
 	];
 
-	public $clearAfterDay = 3;
+	public $databases    = [];
+
+	public $directories  = [];
 
 	/**
 	 * {@inheritDoc}
@@ -65,41 +55,12 @@ class Module extends \navatech\base\Module {
 			$this->controllerNamespace = 'navatech\backup\controllers';
 			$this->defaultRoute        = 'default/index';
 		}
-		$this->backupPath = Yii::getAlias($this->backupPath);
-		if (!file_exists($this->backupPath)) {
-			mkdir($this->backupPath, 0777, true);
+		if (BackupConfig::getCronjob('backupPath') !== false && !file_exists(BackupConfig::getCronjob('backupPath'))) {
+			mkdir(BackupConfig::getCronjob('backupPath'), 0777, true);
 		}
 		if (isset($this->transport['s3']) && !class_exists(\S3::class)) {
 			throw new NotFoundHttpException('S3 does not exist. Please add to composer.json <code>"tpyo/amazon-s3-php-class" : "@dev"</code>');
 		}
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isDatabaseBackupEnable() {
-		return $this->backup[self::TYPE_DATABASE]['enable'];
-	}
-
-	/**
-	 * @return array
-	 */
-	public function backupDatabaseData() {
-		return array_unique($this->backup[self::TYPE_DATABASE]['data']);
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isDirectoryBackupEnable() {
-		return $this->backup[self::TYPE_DIRECTORY]['enable'];
-	}
-
-	/**
-	 * @return array
-	 */
-	public function backupDirectoryData() {
-		return array_unique($this->backup[self::TYPE_DIRECTORY]['data']);
 	}
 
 	/**
@@ -122,9 +83,9 @@ class Module extends \navatech\base\Module {
 	 * Clean file
 	 */
 	public function clean() {
-		$list = FileHelper::findFiles($this->backupPath);
+		$list = FileHelper::findFiles(BackupConfig::getCronjob('backupPath'));
 		foreach ($list as $id => $filename) {
-			if (filectime($filename) < strtotime($this->clearAfterDay . ' days ago')) {
+			if (filectime($filename) < strtotime(BackupConfig::getCronjob('cleanAfterDays') . ' days ago')) {
 				FileHelper::unlink($filename);
 			}
 		}

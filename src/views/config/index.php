@@ -29,17 +29,21 @@ $this->params['breadcrumbs'][] = $this->title;
 				<?= TabsX::widget([
 					'items'        => [
 						[
+							'label'   => 'Cronjob setting',
+							'content' => $this->render('_cronjob'),
+						],
+						[
 							'label'   => 'Transport setting',
 							'content' => $this->render('_transport'),
 						],
 						[
 							'label'   => 'Database setting',
-							'visible' => isset($module->backup[Module::TYPE_DATABASE]) && $databases != null,
+							'visible' => $module->databases != null && $databases != null,
 							'content' => $this->render('_database', ['databases' => $databases]),
 						],
 						[
 							'label'   => 'Directory setting',
-							'visible' => isset($module->backup[Module::TYPE_DIRECTORY]),
+							'visible' => $module->directories != null && $directories != null,
 							'content' => $this->render('_directory', ['directories' => $directories]),
 						],
 					],

@@ -4,6 +4,7 @@ namespace navatech\backup\controllers;
 
 use navatech\backup\components\MysqlBackup;
 use navatech\backup\models\Backup;
+use navatech\backup\models\BackupConfig;
 use navatech\backup\models\UploadForm;
 use navatech\backup\Module;
 use PharData;
@@ -93,7 +94,7 @@ class DefaultController extends Controller {
 	 * @throws \yii\db\Exception
 	 */
 	public function actionCreateDatabase() {
-		if ($this->module->isDatabaseBackupEnable() && isset($_POST['table'])) {
+		if ($this->module->databases != null && isset($_POST['table'])) {
 			$post = $_POST;
 			$sql  = new MysqlBackup();
 			if (isset($post['table'])) {
@@ -132,12 +133,12 @@ class DefaultController extends Controller {
 	 * @return mixed
 	 */
 	public function actionCreateDirectory() {
-		if ($this->module->isDirectoryBackupEnable()) {
-			$paths = $this->module->backupDirectoryData();
+		if ($this->module->directories != null) {
+			$paths = $this->module->directories;
 			foreach ($paths as $folder) {
 				$folder = Yii::getAlias($folder);
 				if (file_exists($folder)) {
-					$archiveFile = $this->module->backupPath . DIRECTORY_SEPARATOR . Module::TYPE_DIRECTORY . '_' . date('Y.m.d_H.i.s') . '.tar';
+					$archiveFile = BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . Module::TYPE_DIRECTORY . '_' . date('Y.m.d_H.i.s') . '.tar';
 					$archive     = new PharData($archiveFile);
 					$archive->buildFromDirectory($folder);
 					Yii::$app->session->setFlash('success', 'Backed up directory');
@@ -159,7 +160,7 @@ class DefaultController extends Controller {
 	 * @return mixed
 	 */
 	public function actionDelete($file) {
-		$sqlFile = Yii::getAlias($this->module->backupPath . DIRECTORY_SEPARATOR . basename($file));
+		$sqlFile = Yii::getAlias(BackupConfig::getCronjob('backupPath'). DIRECTORY_SEPARATOR . basename($file));
 		if (file_exists($sqlFile)) {
 			unlink($sqlFile);
 			Yii::$app->session->setFlash('success', 'File was deleted');
@@ -195,7 +196,7 @@ class DefaultController extends Controller {
 		} else {
 			ini_set('max_execution_time', 0);
 			$sql         = new MysqlBackup();
-			$backup_file = $this->module->backupPath . DIRECTORY_SEPARATOR . basename($file);
+			$backup_file = BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . basename($file);
 			$ext         = pathinfo($backup_file, PATHINFO_EXTENSION);
 			if (in_array($ext, [
 				'zip',
@@ -245,7 +246,7 @@ class DefaultController extends Controller {
 		header('Content-Type: application/csv');
 		header('Content-Disposition: attachment; filename=' . basename($file));
 		header('Pragma: no-cache');
-		readfile($this->module->backupPath . DIRECTORY_SEPARATOR . basename($file));
+		readfile(BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . basename($file));
 	}
 
 	public function actionPercent($type = Module::TYPE_DATABASE) {

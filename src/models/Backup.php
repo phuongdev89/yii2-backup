@@ -125,7 +125,7 @@ class Backup extends Model {
 	protected function getData() {
 		/**@var Module $module */
 		$module    = \Yii::$app->getModule('backup');
-		$list      = FileHelper::findFiles($module->backupPath);
+		$list      = FileHelper::findFiles(BackupConfig::getCronjob('backupPath'));
 		$dataArray = [];
 		foreach ($list as $id => $filename) {
 			$columns         = [];

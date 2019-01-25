@@ -21,6 +21,22 @@ use yii\bootstrap\Html;
 		'id' => 'nava-backup-directory',
 	]) ?>
 	<div class="col-sm-12">
+		<div class="form-group">
+			<label class="control-label" for="backup_config-directory">Enable</label>
+			<div class="row">
+				<div class="col-sm-3">
+					<?= Html::dropDownList(BackupConfig::TYPE_DIRECTORY . '[enable]', BackupConfig::isDirectoryEnable(), [
+						BackupConfig::STATUS_DISABLE => 'Disable',
+						BackupConfig::STATUS_ENABLE  => 'Enable',
+					], [
+						'class' => 'form-control',
+					]) ?>
+				</div>
+			</div>
+		</div>
+	</div>
+	<hr>
+	<div class="col-sm-12">
 		<legend>Directory</legend>
 		<div class="table-responsive">
 			<table class="table table-hover">
@@ -42,7 +58,7 @@ use yii\bootstrap\Html;
 				<tbody>
 				<?php foreach ($directories as $directory) : ?>
 					<tr>
-						<td><?= Html::checkbox(BackupConfig::TYPE_DIRECTORY . '[' . $directory['name'] . ']', true) ?></td>
+						<td><?= Html::checkbox(BackupConfig::TYPE_DIRECTORY . '[data][' . $directory['name'] . ']', BackupConfig::getDirectory($directory['name'])) ?></td>
 						<td><?= $directory['name'] ?></td>
 						<td><?= $directory['count'] ?></td>
 						<td><?= FileHelper::humanFileSize($directory['size']) ?></td>

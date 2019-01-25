@@ -8,6 +8,7 @@
 namespace navatech\backup\components;
 
 use navatech\backup\helpers\FileHelper;
+use navatech\backup\models\BackupConfig;
 use navatech\backup\Module;
 use Yii;
 use yii\base\BaseObject;
@@ -143,7 +144,7 @@ class MysqlBackup extends BaseObject {
 	 * @return bool
 	 */
 	public function startBackup($addCheck = true) {
-		$this->file_name = $this->module->backupPath . DIRECTORY_SEPARATOR . Module::TYPE_DATABASE . '_' . date('Y.m.d_H.i.s') . '.sql';
+		$this->file_name = BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . Module::TYPE_DATABASE . '_' . date('Y.m.d_H.i.s') . '.sql';
 		$this->fp        = fopen($this->file_name, 'w+');
 		if ($this->fp == null) {
 			return false;

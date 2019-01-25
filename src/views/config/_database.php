@@ -17,10 +17,26 @@ use yii\bootstrap\Html;
 
 ?>
 <div class="row">
+	<?php $form = ActiveForm::begin([
+		'id' => 'nava-backup-database',
+	]) ?>
 	<div class="col-sm-12">
-		<?php $form = ActiveForm::begin([
-			'id' => 'nava-backup-database',
-		]) ?>
+		<div class="form-group">
+			<label class="control-label" for="backup_config-database">Enable</label>
+			<div class="row">
+				<div class="col-sm-3">
+					<?= Html::dropDownList(BackupConfig::TYPE_DATABASE . '[enable]', BackupConfig::isDatabaseEnable(), [
+						BackupConfig::STATUS_DISABLE => 'Disable',
+						BackupConfig::STATUS_ENABLE  => 'Enable',
+					], [
+						'class' => 'form-control',
+					]) ?>
+				</div>
+			</div>
+		</div>
+	</div>
+	<hr>
+	<div class="col-sm-12">
 		<?php foreach ($databases as $database) : ?>
 			<legend>Database <?= $database->getName() ?></legend>
 			<div class="table-responsive">
@@ -45,8 +61,8 @@ use yii\bootstrap\Html;
 					<?php foreach ($database->getTables() as $table) : ?>
 						<tr>
 							<td><?= $table ?></td>
-							<td data-checkbox="schema"><?= Html::checkbox(BackupConfig::TYPE_DATABASE . '[' . $database->getName() . '][' . $table . '][schema]', BackupConfig::getDatabase($database->getName(), $table, 'schema')) ?></td>
-							<td data-checkbox="data"><?= Html::checkbox(BackupConfig::TYPE_DATABASE . '[' . $database->getName() . '][' . $table . '][data]', BackupConfig::getDatabase($database->getName(), $table, 'data')) ?></td>
+							<td data-checkbox="schema"><?= Html::checkbox(BackupConfig::TYPE_DATABASE . '[data][' . $database->getName() . '][' . $table . '][schema]', BackupConfig::getDatabase($database->getName(), $table, 'schema')) ?></td>
+							<td data-checkbox="data"><?= Html::checkbox(BackupConfig::TYPE_DATABASE . '[data][' . $database->getName() . '][' . $table . '][data]', BackupConfig::getDatabase($database->getName(), $table, 'data')) ?></td>
 						</tr>
 					<?php endforeach; ?>
 					</tbody>
@@ -56,9 +72,8 @@ use yii\bootstrap\Html;
 		<div class="col-sm-12" style="margin: 10px;">
 			<button type="submit" class="btn btn-primary">Save</button>
 		</div>
-		<?php ActiveForm::end(); ?>
-
 	</div>
+	<?php ActiveForm::end(); ?>
 </div>
 <script>
 	$(document).on('change', '#schema-all', function() {

@@ -14,6 +14,8 @@ use yii\helpers\Json;
  */
 class BackupConfig extends \yii\db\ActiveRecord {
 
+	const TYPE_CRONJOB          = 'CRONJOB';
+
 	const TYPE_DATABASE         = 'DATABASE';
 
 	const TYPE_DIRECTORY        = 'DIRECTORY';
@@ -106,6 +108,72 @@ class BackupConfig extends \yii\db\ActiveRecord {
 				}
 			} catch (\Exception $e) {
 			}
+		}
+		return false;
+	}
+
+	/**
+	 * @param $directory
+	 *
+	 * @return bool
+	 */
+	public static function getDirectory($directory) {
+		$model = self::findOne(['name' => 'directory_config']);
+		if ($model !== null) {
+			try {
+				$data = Json::decode($model->value);
+				return isset($data[$directory]) && $data[$directory] == 1;
+			} catch (\Exception $e) {
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public static function isDatabaseEnable() {
+		$model = self::findOne(['name' => 'database_enable']);
+		return $model !== null && (int) $model->value == 1;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public static function isDirectoryEnable() {
+		$model = self::findOne(['name' => 'directory_enable']);
+		return $model !== null && (int) $model->value == 1;
+	}
+
+	/**
+	 * @param $name
+	 * @param $type
+	 *
+	 * @return BackupConfig
+	 */
+	public static function getInstance($name, $type) {
+		$model = BackupConfig::findOne(['name' => $name]);
+		if ($model === null) {
+			$model       = new BackupConfig();
+			$model->name = $name;
+			$model->type = $type;
+			$model->save();
+		}
+		return $model;
+	}
+
+	/**
+	 * @param $name
+	 *
+	 * @return bool
+	 */
+	public static function getCronjob($name) {
+		$model = self::findOne(['name' => $name]);
+		if ($model !== null) {
+			if ($model->name == 'backupPath' && $model->value[0] == '@') {
+				return \Yii::getAlias($model->value);
+			}
+			return $model->value;
 		}
 		return false;
 	}

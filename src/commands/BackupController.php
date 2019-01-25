@@ -9,6 +9,7 @@
 namespace navatech\backup\commands;
 
 use navatech\backup\components\MysqlBackup;
+use navatech\backup\models\BackupConfig;
 use navatech\backup\Module;
 use PharData;
 use Swift_TransportException;
@@ -47,15 +48,15 @@ class BackupController extends Controller {
 	 * @throws \yii\base\Exception
 	 */
 	public function actionDirectory($path = null) {
-		if ($this->module->isDirectoryBackupEnable()) {
-			$paths = $this->module->backupDirectoryData();
+		if ($this->module->directories !=null) {
+			$paths = $this->module->directories;
 			if ($path != null) {
 				$paths = [$path];
 			}
 			foreach ($paths as $folder) {
 				$folder = Yii::getAlias($folder);
 				if (file_exists($folder)) {
-					$archiveFile = $this->module->backupPath . DIRECTORY_SEPARATOR . Module::TYPE_DIRECTORY . '_' . date('Y.m.d_H.i.s') . '.tar';
+					$archiveFile = BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . Module::TYPE_DIRECTORY . '_' . date('Y.m.d_H.i.s') . '.tar';
 					$archive     = new PharData($archiveFile);
 					$archive->buildFromDirectory($folder);
 					if ($this->module->mail->enable) {
@@ -89,8 +90,8 @@ class BackupController extends Controller {
 	 * @throws \yii\db\Exception
 	 */
 	public function actionDatabase($db = null) {
-		if ($this->module->isDatabaseBackupEnable()) {
-			$dbs = $this->module->backupDatabaseData();
+		if ($this->module->databases != null) {
+			$dbs = $this->module->databases;
 			if ($db != null) {
 				$dbs = [$db];
 			}
@@ -141,12 +142,12 @@ class BackupController extends Controller {
 	 * @param int $days Days old of files
 	 */
 	public function actionClear($days = 3) {
-		$files = array_diff(scandir($this->module->backupPath), [
+		$files = array_diff(scandir(BackupConfig::getCronjob('backupPath')), [
 			'.',
 			'..',
 		]);
 		foreach ($files as $file) {
-			$filePath = $this->module->backupPath . DIRECTORY_SEPARATOR . $file;
+			$filePath = BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . $file;
 			$old      = (time() - filemtime($filePath)) / (3600 * 24);
 			if ($old >= $days) {
 				echo unlink($filePath) ? 'Removed "' . $file . '"' . PHP_EOL : 'Can not remove "' . $file . '"' . PHP_EOL;
