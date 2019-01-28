@@ -8,7 +8,7 @@
 
 namespace navatech\backup\transports;
 
-use navatech\backup\Module;
+use navatech\backup\models\BackupConfig;
 use Yii;
 use yii\base\BaseObject;
 use yii\base\ErrorException;
@@ -17,20 +17,6 @@ use yii\web\Application;
 use yii2mod\ftp\FtpClient;
 
 class Ftp extends BaseObject {
-
-	public  $enable     = false;
-
-	public  $host;
-
-	public  $port;
-
-	public  $user;
-
-	public  $pass;
-
-	public  $ssl        = false;
-
-	public  $dir;
 
 	public  $timeOut    = 90;
 
@@ -44,7 +30,6 @@ class Ftp extends BaseObject {
 	 * @param array $config
 	 *
 	 * @throws \yii2mod\ftp\FtpException
-	 * @throws \yii\base\InvalidConfigException
 	 */
 	public function __construct($config = []) {
 		parent::__construct(null);
@@ -53,29 +38,21 @@ class Ftp extends BaseObject {
 				$this->$key = $value;
 			}
 		}
-		if (Module::hasSetting()) {
-			$this->enable = Yii::$app->setting->get('backup_ftp_enable', 1) == 1;
-			$this->host   = Yii::$app->setting->get('backup_ftp_host', '');
-			$this->port   = Yii::$app->setting->get('backup_ftp_port', 21);
-			$this->user   = Yii::$app->setting->get('backup_ftp_user', '');
-			$this->pass   = Yii::$app->setting->get('backup_ftp_pass', '');
-		}
-		if ($this->enable) {
-			try {
-				$this->client = new FtpClient();
-				$this->client->connect($this->host, $this->ssl, $this->port, $this->timeOut);
-				$this->client->pasv(true);
-				$this->client->login($this->user, $this->pass);
-				if ($this->appendTime) {
-					$this->dir .= DIRECTORY_SEPARATOR . date('Y-m-d');
-				}
-				if (!$this->client->isDir($this->dir)) {
-					$this->client->mkdir($this->dir);
-				}
-				$this->client->chdir($this->dir);
-			} catch (ErrorException $e) {
-				echo "Can not create folder. Make sure folder is existed" . PHP_EOL;
+		try {
+			$this->client = new FtpClient();
+			$this->client->connect(BackupConfig::getTransport('ftp_host'), BackupConfig::getTransport('ftp_port') == 22, BackupConfig::getTransport('ftp_port'), $this->timeOut);
+			$this->client->pasv(true);
+			$this->client->login(BackupConfig::getTransport('ftp_user'), BackupConfig::getTransport('ftp_pass'));
+			$directory = BackupConfig::getTransport('ftp_directory');
+			if ($this->appendTime) {
+				$directory .= (substr($directory, - 1) != '/' ? DIRECTORY_SEPARATOR : '') . date('Y-m-d');
 			}
+			if (!$this->client->isDir($directory)) {
+				$this->client->mkdir($directory);
+			}
+			$this->client->chdir($directory);
+		} catch (ErrorException $e) {
+			echo "Can not create folder. Make sure folder is existed" . PHP_EOL;
 		}
 	}
 

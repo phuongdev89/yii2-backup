@@ -2,29 +2,51 @@
 
 namespace navatech\backup\models;
 
+use yii\behaviors\TimestampBehavior;
+use yii\db\ActiveRecord;
+
 /**
  * This is the model class for table "backup_history".
  *
- * @property int                $id
- * @property string             $name
- * @property int                $size
- * @property int                $created_at
- * @property int                $modified_at
- * @property string             $type
- * @property int                $status
- * @property int                $mail_status
- * @property int                $ftp_status
- * @property int                $s3_status
+ * @property int    $id
+ * @property string $name
+ * @property int    $size
+ * @property int    $created_at
+ * @property int    $updated_at
+ * @property string $type
+ * @property string $data
+ * @property int    $status
+ * @property int    $mail_status
+ * @property int    $ftp_status
+ * @property int    $s3_status
  *
- * @property BackupHistoryQueue $backupHistoryQueue
  */
-class BackupHistory extends \yii\db\ActiveRecord {
+class BackupHistory extends ActiveRecord {
+
+	const TYPE_DATABASE  = 'DATABASE';
+
+	const TYPE_DIRECTORY = 'DIRECTORY';
+
+	const STATUS_DONE    = 1;
+
+	const STATUS_DRAFT   = 0;
 
 	/**
 	 * {@inheritdoc}
 	 */
 	public static function tableName() {
 		return 'backup_history';
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public function behaviors() {
+		return [
+			'timestamp' => [
+				'class' => TimestampBehavior::class,
+			],
+		];
 	}
 
 	/**
@@ -43,7 +65,7 @@ class BackupHistory extends \yii\db\ActiveRecord {
 				[
 					'size',
 					'created_at',
-					'modified_at',
+					'updated_at',
 					'status',
 					'mail_status',
 					'ftp_status',
@@ -52,7 +74,10 @@ class BackupHistory extends \yii\db\ActiveRecord {
 				'integer',
 			],
 			[
-				['type'],
+				[
+					'type',
+					'data',
+				],
 				'string',
 			],
 			[
@@ -72,7 +97,7 @@ class BackupHistory extends \yii\db\ActiveRecord {
 			'name'        => 'Name',
 			'size'        => 'Size',
 			'created_at'  => 'Created At',
-			'modified_at' => 'Modified At',
+			'updated_at'  => 'Modified At',
 			'type'        => 'Type',
 			'status'      => 'Status',
 			'mail_status' => 'Mail Status',
@@ -82,9 +107,13 @@ class BackupHistory extends \yii\db\ActiveRecord {
 	}
 
 	/**
-	 * @return \yii\db\ActiveQuery
+	 * @return false|int
+	 * @throws \Throwable
+	 * @throws \yii\db\StaleObjectException
 	 */
-	public function getBackupHistoryQueue() {
-		return $this->hasOne(BackupHistoryQueue::className(), ['backup_history_id' => 'id']);
+	public function delete() {
+		$path = BackupConfig::getCronjob('backupPath');
+		@unlink($path . DIRECTORY_SEPARATOR . $this->name);
+		return parent::delete();
 	}
 }

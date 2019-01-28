@@ -8,7 +8,7 @@
 
 namespace navatech\backup\transports;
 
-use navatech\backup\Module;
+use navatech\backup\models\BackupConfig;
 use navatech\email\models\EmailTemplate;
 use Yii;
 use yii\base\BaseObject;
@@ -17,13 +17,7 @@ use yii\swiftmailer\Message;
 
 class Mail extends BaseObject {
 
-	public $enable    = false;
-
-	public $fromEmail = 'support@gmail.com';
-
-	public $toEmail   = 'backup@gmail.com';
-
-	public $viewPath  = '@vendor/navatech/yii2-backup/src/views/mail';
+	public $viewPath = '@vendor/navatech/yii2-backup/src/views/mail';
 
 	/**@var EmailTemplate|Message */
 	private $message;
@@ -42,21 +36,16 @@ class Mail extends BaseObject {
 				$this->$key = $value;
 			}
 		}
-		if (Module::hasSetting()) {
-			$this->enable    = Yii::$app->setting->get('backup_email_enable', 1) == 1;
-			$this->fromEmail = Yii::$app->setting->get('backup_email_from', 'support@gmail.com');
-			$this->toEmail   = Yii::$app->setting->get('backup_email_to', 'backup@gmail.com');
-		}
 		/**@var BaseMailer $mailer */
 		$mailer = Yii::$app->mailer;
 		if (Yii::$app->hasModule('mailer') && Yii::$app->getModule('mailer') instanceof \navatech\email\Module) {
 			$email                    = EmailTemplate::findByShortcut('backup');
 			$mailer->viewPath         = false;
-			$this->mailerParams['to'] = $this->toEmail;
+			$this->mailerParams['to'] = BackupConfig::getTransport('email_to');
 			$this->message            = $email;
 		} else {
 			$mailer->viewPath = $this->viewPath;
-			$this->message    = $mailer->compose('backup')->setFrom([$this->fromEmail => Yii::$app->name])->setTo($this->toEmail);
+			$this->message    = $mailer->compose('backup')->setFrom([BackupConfig::getTransport('email_from') => Yii::$app->name])->setTo(BackupConfig::getTransport('email_to'));
 		}
 	}
 

@@ -11,7 +11,7 @@ class m190124_031111_backup_config extends Migration {
 			'id'    => Schema::TYPE_PK . '',
 			'name'  => Schema::TYPE_STRING . '(255) NOT NULL',
 			'value' => Schema::TYPE_TEXT . ' NULL',
-			'type'  => "enum('DATABASE','DIRECTORY','TRANSPORT')" . ' NOT NULL DEFAULT "DATABASE"',
+			'type'  => Schema::TYPE_STRING . '(255) NOT NULL DEFAULT "DATABASE"',
 		], $tableOptions);
 	}
 

@@ -2,6 +2,7 @@
 
 namespace navatech\backup\models;
 
+use yii\db\ActiveRecord;
 use yii\helpers\Json;
 
 /**
@@ -12,7 +13,7 @@ use yii\helpers\Json;
  * @property string $value
  * @property string $type
  */
-class BackupConfig extends \yii\db\ActiveRecord {
+class BackupConfig extends ActiveRecord {
 
 	const TYPE_CRONJOB          = 'CRONJOB';
 
@@ -87,6 +88,9 @@ class BackupConfig extends \yii\db\ActiveRecord {
 			$model->name = $name;
 			$model->type = BackupConfig::TYPE_TRANSPORT;
 			$model->save();
+		}
+		if ($model->value === null && strpos($model->name, 'enable') !== false) {
+			return 0;
 		}
 		return $model->value;
 	}

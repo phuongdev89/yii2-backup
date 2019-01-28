@@ -25,6 +25,17 @@ class ConfigController extends Controller {
 	public $module;
 
 	/**
+	 * @param \yii\base\Action $action
+	 *
+	 * @return bool
+	 * @throws \yii\web\BadRequestHttpException
+	 */
+	public function beforeAction($action) {
+		$this->module->clean();
+		return parent::beforeAction($action);
+	}
+
+	/**
 	 * @return string
 	 */
 	public function actionIndex() {

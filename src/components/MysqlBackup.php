@@ -144,7 +144,7 @@ class MysqlBackup extends BaseObject {
 	 * @return bool
 	 */
 	public function startBackup($addCheck = true) {
-		$this->file_name = BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . Module::TYPE_DATABASE . '_' . date('Y.m.d_H.i.s') . '.sql';
+		$this->file_name = BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . Module::TYPE_DATABASE . '_' . $this->getName() . '_' . date('Y.m.d_H.i.s') . '.sql';
 		$this->fp        = fopen($this->file_name, 'w+');
 		if ($this->fp == null) {
 			return false;

@@ -9,13 +9,17 @@
 namespace navatech\backup\commands;
 
 use navatech\backup\components\MysqlBackup;
+use navatech\backup\helpers\StringHelper;
 use navatech\backup\models\BackupConfig;
+use navatech\backup\models\BackupHistory;
 use navatech\backup\Module;
 use PharData;
 use Swift_TransportException;
 use Yii;
 use yii\console\Controller;
+use yii\console\Exception;
 use yii\helpers\Console;
+use yii\helpers\Json;
 
 /**
  * @property Module $this->module
@@ -41,41 +45,105 @@ class BackupController extends Controller {
 	}
 
 	/**
+	 * Run daemon based on "for cycle"
+	 *
+	 * @param int $loopLimit
+	 * @param int $chunkSize
+	 *
+	 * @throws \Exception
+	 * @throws \Throwable
+	 */
+	public function actionDaemon($loopLimit = 1000, $chunkSize = 100) {
+		set_time_limit(0);
+		for ($i = 1; $i < $loopLimit; $i ++) {
+			$this->runChunk($chunkSize);
+			sleep(1);
+		}
+	}
+
+	/**
+	 * Tries to run sendOne $chunkSize times
+	 *
+	 * @param int $chunkSize
+	 *
+	 * @return bool
+	 * @throws \Exception
+	 * @throws \Throwable
+	 */
+	protected function runChunk($chunkSize = 100) {
+		for ($i = 0; $i < $chunkSize; $i ++) {
+			$r = $this->actionRunOne();
+			if (!$r) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * @throws \yii\base\Exception
+	 * @throws \yii\db\Exception
+	 * @throws \Throwable
+	 */
+	public function actionRunOne() {
+		$this->clean();
+		$lastBackupHistory = BackupHistory::find()->orderBy(['created_at' => SORT_DESC])->one();
+		if ($lastBackupHistory !== null) {
+			if (time() - $lastBackupHistory->created_at < BackupConfig::getCronjob('runEvery')) {
+				exit(0);
+			}
+		}
+		$this->database();
+		$this->directory();
+	}
+
+	/**
 	 * Backup directory
 	 *
-	 * @param string $path Force the path which needs to be backed up
-	 *
+	 * @throws Exception
 	 * @throws \yii\base\Exception
+	 * @throws \yii\base\InvalidConfigException
 	 */
-	public function actionDirectory($path = null) {
-		if ($this->module->directories !=null) {
-			$paths = $this->module->directories;
-			if ($path != null) {
-				$paths = [$path];
+	protected function directory() {
+		if ($this->module->directories != null) {
+			$config = BackupConfig::findOne(['name' => 'directory_config']);
+			if ($config === null) {
+				throw new Exception('Config has not been executed.');
 			}
-			foreach ($paths as $folder) {
-				$folder = Yii::getAlias($folder);
+			$paths = Json::decode($config->value);
+			foreach ($paths as $path => $isEnable) {
+				$folder = Yii::getAlias($path);
 				if (file_exists($folder)) {
-					$archiveFile = BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . Module::TYPE_DIRECTORY . '_' . date('Y.m.d_H.i.s') . '.tar';
-					$archive     = new PharData($archiveFile);
+					$archiveFile           = BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . Module::TYPE_DIRECTORY . '_' . StringHelper::removeSign($path) . '_' . date('Y.m.d_H.i.s') . '.tar';
+					$backupHistory         = new BackupHistory();
+					$backupHistory->name   = basename($archiveFile);
+					$backupHistory->type   = BackupHistory::TYPE_DIRECTORY;
+					$backupHistory->status = BackupHistory::STATUS_DRAFT;
+					$backupHistory->data   = $archiveFile;
+					$archive               = new PharData($archiveFile);
 					$archive->buildFromDirectory($folder);
-					if ($this->module->mail->enable) {
+					if ((int) BackupConfig::getTransport('email_enable') == 1) {
 						if (filesize($archiveFile) < 20 * 1024 * 1024) {
 							try {
 								$this->module->mail->setFile($archiveFile)->setType(Module::TYPE_DIRECTORY)->send();
+								$backupHistory->mail_status = BackupHistory::STATUS_DONE;
 							} catch (Swift_TransportException $e) {
 								Console::output('Can not send email. ' . $e->getMessage());
 							}
 						} else {
-							echo 'Can not send file, file size is too big!' . PHP_EOL;
+							Console::output('Can not send file, file size is too big!');
 						}
 					}
-					if ($this->module->ftp->enable) {
+					if ((int) BackupConfig::getTransport('ftp_enable') == 1) {
 						$this->module->ftp->setFile($archiveFile)->push();
+						$backupHistory->ftp_status = BackupHistory::STATUS_DONE;
 					}
-					echo 'Folder "' . $folder . '" backed up!' . PHP_EOL;
+					$backupHistory->size   = filesize($archiveFile);
+					$backupHistory->status = BackupHistory::STATUS_DONE;
+					$backupHistory->save();
+					Console::output('Folder "' . $folder . '" backed up!');
 				} else {
-					echo 'Folder "' . $folder . '" does not exists' . PHP_EOL;
+					Console::output('Folder "' . $folder . '" does not exists');
 				}
 			}
 		}
@@ -84,41 +152,56 @@ class BackupController extends Controller {
 	/**
 	 * Backup db
 	 *
-	 * @param string $db Force the db which needs to be backed up
-	 *
 	 * @throws \yii\base\Exception
 	 * @throws \yii\db\Exception
 	 */
-	public function actionDatabase($db = null) {
+	protected function database() {
 		if ($this->module->databases != null) {
-			$dbs = $this->module->databases;
-			if ($db != null) {
-				$dbs = [$db];
+			$config = BackupConfig::findOne(['name' => 'database_config']);
+			if ($config === null) {
+				throw new Exception('Config has not been executed.');
 			}
+			$dbs = Json::decode($config->value);
 			Console::output('Starting backup database.');
-			foreach ($dbs as $db) {
+			foreach ($dbs as $db => $tables) {
+				$backupHistory         = new BackupHistory();
+				$backupHistory->type   = BackupHistory::TYPE_DATABASE;
+				$backupHistory->status = BackupHistory::STATUS_DRAFT;
+				$totalProgress         = count($tables, true) - count($tables);
 				Console::output('Backing up `' . $db . '`');
-				Console::startProgress(0, 100);
-				$sql    = new MysqlBackup($db);
-				$tables = $sql->getTables();
+				Console::startProgress(0, $totalProgress);
+				$sql = new MysqlBackup(['db' => $db]);
 				if (!$sql->StartBackup()) {
 					die;
 				}
-				foreach ($tables as $tableKey => $tableName) {
-					Console::updateProgress(($tableKey + 1) / 2, count($tables));
-					$sql->getColumns($tableName);
+				$progress = 0;
+				foreach ($tables as $tableName => $export) {
+					if (in_array($tableName, $sql->getTables())) {
+						if (isset($export['schema']) && $export['schema'] == 1) {
+							$sql->getColumns($tableName);
+							$progress ++;
+							Console::updateProgress($progress, $totalProgress);
+						}
+						if (isset($export['data']) && $export['data'] == 1) {
+							$sql->getData($tableName);
+							$progress ++;
+							Console::updateProgress($progress, $totalProgress);
+						}
+					}
 				}
-				foreach ($tables as $tableKey => $tableName) {
-					Console::updateProgress(count($tables) / 2 + ($tableKey + 1) / 2, count($tables));
-					$sql->getData($tableName);
-				}
-				$sqlFile = $sql->EndBackup();
+				$sqlFile               = $sql->EndBackup();
+				$backupHistory->data   = Json::encode($tables);
+				$backupHistory->status = BackupHistory::STATUS_DONE;
+				$backupHistory->name   = basename($sqlFile);
+				$backupHistory->size   = filesize($sqlFile);
+				Console::updateProgress($totalProgress, $totalProgress);
 				Console::endProgress(true, false);
 				Console::output('Backed up `' . $db . '`');
-				if ($this->module->mail->enable) {
+				if ((int) BackupConfig::getTransport('email_enable') == 1) {
 					if (filesize($sqlFile) < 20 * 1024 * 1024) {
 						try {
 							$this->module->mail->setFile($sqlFile)->setType(Module::TYPE_DATABASE)->send();
+							$backupHistory->mail_status = BackupHistory::STATUS_DONE;
 						} catch (Swift_TransportException $e) {
 							Console::output('Can not send email. ' . $e->getMessage());
 						}
@@ -126,9 +209,11 @@ class BackupController extends Controller {
 						Console::output('Can not attach filesize > 20MB.');
 					}
 				}
-				if ($this->module->ftp->enable) {
+				if ((int) BackupConfig::getTransport('ftp_enable') == 1) {
 					$this->module->ftp->setFile($sqlFile)->push();
+					$backupHistory->ftp_status = BackupHistory::STATUS_DONE;
 				}
+				$backupHistory->save();
 				Console::output('Backed up `' . $db . '`');
 			}
 		} else {
@@ -139,19 +224,17 @@ class BackupController extends Controller {
 	/**
 	 * Remove files was created x days ago
 	 *
-	 * @param int $days Days old of files
+	 * @throws \Throwable
+	 * @throws \yii\db\StaleObjectException
 	 */
-	public function actionClear($days = 3) {
-		$files = array_diff(scandir(BackupConfig::getCronjob('backupPath')), [
-			'.',
-			'..',
-		]);
-		foreach ($files as $file) {
-			$filePath = BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . $file;
-			$old      = (time() - filemtime($filePath)) / (3600 * 24);
-			if ($old >= $days) {
-				echo unlink($filePath) ? 'Removed "' . $file . '"' . PHP_EOL : 'Can not remove "' . $file . '"' . PHP_EOL;
-			}
+	protected function clean() {
+		$backups = BackupHistory::find()->andWhere([
+			'<',
+			'created_at',
+			(time() - (BackupConfig::getCronjob('cleanAfterDays') * 3600 * 24)),
+		])->all();
+		foreach ($backups as $backup) {
+			$backup->delete();
 		}
 	}
 }

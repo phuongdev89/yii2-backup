@@ -15,11 +15,11 @@ use yii\bootstrap\ActiveForm;
 use yii\bootstrap\Html;
 
 ?>
+<?php $form = ActiveForm::begin([
+	'id' => 'nava-backup-transport',
+]) ?>
 <div class="row">
 	<div class="col-sm-4">
-		<?php $form = ActiveForm::begin([
-			'id' => 'nava-backup-transport-email',
-		]) ?>
 		<legend>Mail</legend>
 		<div class="form-group">
 			<label class="control-label" for="backup_config-mail-name">Enable</label>
@@ -77,12 +77,8 @@ use yii\bootstrap\Html;
 			</div>
 		</div>
 		<button type="submit" class="btn btn-primary">Save</button>
-		<?php ActiveForm::end(); ?>
 	</div>
 	<div class="col-sm-4">
-		<?php $form = ActiveForm::begin([
-			'id' => 'nava-backup-transport-ftp',
-		]) ?>
 		<legend>FTP</legend>
 		<div class="form-group">
 			<label class="control-label" for="backup_config-ftp-name">Enable</label>
@@ -115,27 +111,33 @@ use yii\bootstrap\Html;
 			</div>
 		</div>
 		<div class="form-group">
-			<label class="control-label" for="backup_config-ftp-user">User</label>
-			<?= Html::input('text', BackupConfig::TYPE_TRANSPORT . '[ftp][user]', BackupConfig::getTransport('ftp_user'), [
-				'class' => 'form-control',
-				'id'    => 'backup_config-ftp-user',
-			]) ?>
+			<label class="control-label" for="backup_config-ftp-user">User & Pass</label>
+			<div class="row">
+				<div class="col-sm-6">
+					<?= Html::input('text', BackupConfig::TYPE_TRANSPORT . '[ftp][user]', BackupConfig::getTransport('ftp_user'), [
+						'class' => 'form-control',
+						'id'    => 'backup_config-ftp-user',
+					]) ?>
+				</div>
+				<div class="col-sm-6">
+					<?= Html::input('text', BackupConfig::TYPE_TRANSPORT . '[ftp][pass]', BackupConfig::getTransport('ftp_pass'), [
+						'class' => 'form-control',
+						'id'    => 'backup_config-ftp-pass',
+					]) ?>
+				</div>
+			</div>
 		</div>
 		<div class="form-group">
-			<label class="control-label" for="backup_config-ftp-pass">Pass</label>
-			<?= Html::input('text', BackupConfig::TYPE_TRANSPORT . '[ftp][pass]', BackupConfig::getTransport('ftp_pass'), [
-				'class' => 'form-control',
-				'id'    => 'backup_config-ftp-pass',
+			<label class="control-label" for="backup_config-ftp-directory">Directory</label>
+			<?= Html::input('text', BackupConfig::TYPE_TRANSPORT . '[ftp][directory]', BackupConfig::getTransport('ftp_directory'), [
+				'class'       => 'form-control',
+				'id'          => 'backup_config-ftp-directory',
+				'placeholder' => '/var/www/backup',
 			]) ?>
 		</div>
-		<button type="submit" class="btn btn-primary">Save</button>
-		<?php ActiveForm::end(); ?>
 
 	</div>
 	<div class="col-sm-4">
-		<?php $form = ActiveForm::begin([
-			'id' => 'nava-backup-transport-s3',
-		]) ?>
 		<legend>S3</legend>
 		<div class="form-group">
 			<label class="control-label" for="backup_config-s3-name">Enable</label>
@@ -181,11 +183,9 @@ use yii\bootstrap\Html;
 				'id'    => 'backup_config-s3-secret_key',
 			]) ?>
 		</div>
-		<button type="submit" class="btn btn-primary">Save</button>
-		<?php ActiveForm::end(); ?>
-
 	</div>
 </div>
+<?php ActiveForm::end(); ?>
 <script>
 	$(document).on("change", '#backup_config-mail-system', function() {
 		let th = $(this);

@@ -25,7 +25,7 @@ class Module extends \navatech\base\Module {
 
 	const TYPE_DIRECTORY = 'directory';
 
-	public $defaultRoute = 'default/index';
+	public $defaultRoute = 'history/index';
 
 	public $transport    = [
 		'mail' => [
@@ -53,7 +53,7 @@ class Module extends \navatech\base\Module {
 			$this->controllerNamespace = 'navatech\backup\commands';
 		} else {
 			$this->controllerNamespace = 'navatech\backup\controllers';
-			$this->defaultRoute        = 'default/index';
+			$this->defaultRoute        = 'history/index';
 		}
 		if (BackupConfig::getCronjob('backupPath') !== false && !file_exists(BackupConfig::getCronjob('backupPath'))) {
 			mkdir(BackupConfig::getCronjob('backupPath'), 0777, true);

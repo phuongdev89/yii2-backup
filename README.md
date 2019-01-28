@@ -35,37 +35,20 @@ In console configure:
 'modules'             => [
     'backup' => [
         'class'     => 'navatech\backup\Module',
-        'clear'     => 3, //TODO clear if db more than 3 days old.
-        'backup'    => [
-            'database'     => [
-                'enable' => true,
-                'data'   => [ //TODO List of database which need to be backed up
-                    'db',
-                    'db1',
-                ],
-            ],
-            'directory' => [
-                'enable' => false,
-                'data'   => [ //TODO List of directories which need to be backed up
-                    '@app/web/uploads',
-                    '@backend/web/uploads',
-                ],
-            ],
+        'database'     => [
+            'db',
+            'db1',
+        ],
+        'directory' => [
+            '@app/web/uploads',
+            '@backend/web/uploads',
         ],
         'transport' => [
             'mail' => [
                 'class'     => '\navatech\backup\transports\Mail',
-                'enable'    => true, //TODO default true
-                'fromEmail' => 'support@gmail.com',
-                'toEmail'   => 'backup@gmail.com',
             ],
             'ftp'  => [
                 'class'  => '\navatech\backup\transports\Ftp',
-                'enable' => false, //TODO default false
-                'host'   => 'ftp.example.com',
-                'user'   => 'login',
-                'pass'   => 'password',
-                'dir'    => '/home/example/public_html/backup',
             ],
         ],
     ],
