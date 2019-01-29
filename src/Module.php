@@ -83,10 +83,12 @@ class Module extends \navatech\base\Module {
 	 * Clean file
 	 */
 	public function clean() {
-		$list = FileHelper::findFiles(BackupConfig::getCronjob('backupPath'));
-		foreach ($list as $id => $filename) {
-			if (filectime($filename) < strtotime(BackupConfig::getCronjob('cleanAfterDays') . ' days ago')) {
-				FileHelper::unlink($filename);
+		if (BackupConfig::getCronjob('backupPath') !== false) {
+			$list = FileHelper::findFiles(BackupConfig::getCronjob('backupPath'));
+			foreach ($list as $id => $filename) {
+				if (filectime($filename) < strtotime(BackupConfig::getCronjob('cleanAfterDays') . ' days ago')) {
+					FileHelper::unlink($filename);
+				}
 			}
 		}
 	}

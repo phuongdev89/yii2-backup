@@ -3,10 +3,10 @@
 use kartik\grid\DataColumn;
 use kartik\grid\GridView;
 use navatech\backup\components\MysqlBackup;
+use navatech\backup\models\BackupConfig;
 use navatech\backup\models\BackupHistory;
 use navatech\backup\models\search\BackupHistorySearch;
 use navatech\backup\Module;
-use yii\bootstrap\ActiveForm;
 use yii\bootstrap\Html;
 use yii\data\ArrayDataProvider;
 use yii\helpers\Url;
@@ -107,6 +107,7 @@ $this->params ['breadcrumbs'] [] = [
 			],
 			[
 				'attribute' => 'mail_status',
+				'visible'   => BackupConfig::getTransport('mail_enable') !== 0,
 				'filter'    => [
 					BackupHistory::STATUS_DRAFT => 'No',
 					BackupHistory::STATUS_DONE  => 'Yes',
@@ -122,6 +123,7 @@ $this->params ['breadcrumbs'] [] = [
 			],
 			[
 				'attribute' => 'ftp_status',
+				'visible'   => BackupConfig::getTransport('ftp_enable') !== 0,
 				'filter'    => [
 					BackupHistory::STATUS_DRAFT => 'No',
 					BackupHistory::STATUS_DONE  => 'Yes',
@@ -137,6 +139,7 @@ $this->params ['breadcrumbs'] [] = [
 			],
 			[
 				'attribute' => 's3_status',
+				'visible'   => BackupConfig::getTransport('s3_enable') !== 0,
 				'filter'    => [
 					BackupHistory::STATUS_DRAFT => 'No',
 					BackupHistory::STATUS_DONE  => 'Yes',

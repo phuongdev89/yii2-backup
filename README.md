@@ -41,11 +41,11 @@ In console configure:
 'modules'             => [
     'backup' => [
         'class'     => 'navatech\backup\Module',
-        'database'     => [
+        'databases'     => [
             'db',
             'db1',
         ],
-        'directory' => [
+        'directories' => [
             '@app/web/uploads',
             '@backend/web/uploads',
         ],

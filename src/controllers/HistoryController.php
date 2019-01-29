@@ -34,8 +34,6 @@ class HistoryController extends Controller {
 	/**@var Module */
 	public  $module;
 
-	private $progress_message = null;
-
 	/**
 	 * @param \yii\base\Action $action
 	 *
