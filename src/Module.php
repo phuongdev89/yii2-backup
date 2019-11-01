@@ -12,6 +12,7 @@ use navatech\backup\helpers\FileHelper;
 use navatech\backup\models\BackupConfig;
 use navatech\backup\transports\Ftp;
 use navatech\backup\transports\Mail;
+use yii\base\ErrorException;
 use yii\console\Application as ConsoleApplication;
 use yii\web\NotFoundHttpException;
 
@@ -87,7 +88,11 @@ class Module extends \navatech\base\Module {
 			$list = FileHelper::findFiles(BackupConfig::getCronjob('backupPath'));
 			foreach ($list as $id => $filename) {
 				if (filectime($filename) < strtotime(BackupConfig::getCronjob('cleanAfterDays') . ' days ago')) {
-					FileHelper::unlink($filename);
+					try {
+						FileHelper::unlink($filename);
+					} catch (ErrorException $e) {
+						continue;
+					}
 				}
 			}
 		}
