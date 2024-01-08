@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by Navatech.
+ * Created by phuongdev89.
  * @project yii2-backup
  * @author  Phuong
  * @email   notteen[at]gmail.com
@@ -8,11 +8,11 @@
  * @time    10:01 AM
  */
 
-namespace navatech\backup\controllers;
+namespace phuongdev89\backup\controllers;
 
-use navatech\backup\components\MysqlBackup;
-use navatech\backup\models\BackupConfig;
-use navatech\backup\Module;
+use phuongdev89\backup\components\MysqlBackup;
+use phuongdev89\backup\models\BackupConfig;
+use phuongdev89\backup\Module;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Yii;

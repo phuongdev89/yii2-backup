@@ -6,10 +6,10 @@
  * Time: 10:14 PM
  */
 
-namespace navatech\backup\transports;
+namespace phuongdev89\backup\transports;
 
-use navatech\backup\models\BackupConfig;
-use navatech\email\models\EmailTemplate;
+use phuongdev89\backup\models\BackupConfig;
+use phuongdev89\email\models\EmailTemplate;
 use Yii;
 use yii\base\BaseObject;
 use yii\mail\BaseMailer;
@@ -17,7 +17,7 @@ use yii\swiftmailer\Message;
 
 class Mail extends BaseObject {
 
-	public $viewPath = '@vendor/navatech/yii2-backup/src/views/mail';
+	public $viewPath = '@vendor/phuongdev89/yii2-backup/src/views/mail';
 
 	/**@var EmailTemplate|Message */
 	private $message;
@@ -38,7 +38,7 @@ class Mail extends BaseObject {
 		}
 		/**@var BaseMailer $mailer */
 		$mailer = Yii::$app->mailer;
-		if (Yii::$app->hasModule('mailer') && Yii::$app->getModule('mailer') instanceof \navatech\email\Module) {
+		if (Yii::$app->hasModule('mailer') && Yii::$app->getModule('mailer') instanceof \phuongdev89\email\Module) {
 			$email                    = EmailTemplate::findByShortcut('backup');
 			$mailer->viewPath         = false;
 			$this->mailerParams['to'] = BackupConfig::getTransport('email_to');

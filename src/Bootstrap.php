@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by Navatech.
+ * Created by phuongdev89.
  * @project yii2-setting
  * @author  Phuong
  * @email   phuong17889[at]gmail.com
@@ -9,7 +9,7 @@
  * @version 2.0.0
  */
 
-namespace navatech\backup;
+namespace phuongdev89\backup;
 
 use Yii;
 use yii\base\Application;

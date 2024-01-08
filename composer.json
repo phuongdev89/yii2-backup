@@ -1,5 +1,5 @@
 {
-	"name" : "navatech/yii2-backup",
+	"name" : "phuongdev89/yii2-backup",
 	"description" : "Yii2 backup module",
 	"type" : "yii2-extension",
 	"keywords" : [
@@ -12,7 +12,7 @@
 	"authors" : [
 		{
 			"name" : "Le Phuong",
-			"email" : "phuong17889@gmail.com"
+			"email" : "phuongdev89@gmail.com"
 		}
 	],
 	"require" : {
@@ -21,16 +21,18 @@
 		"yiisoft/yii2" : "*",
 		"yii2mod/yii2-ftp" : "^1.0",
 		"kartik-v/yii2-grid" : "3.2.*",
-		"navatech/yii2-email-manager" : "@dev",
+		"phuongdev89/yii2-base" : "@dev",
+		"phuongdev89/yii2-email-manager" : "@dev",
 		"kartik-v/yii2-date-range" : "@dev",
-		"kartik-v/yii2-tabs-x" : "@dev"
+		"kartik-v/yii2-tabs-x" : "@dev",
+		"bp-sys/yii2-aws-s3": "@dev"
 	},
 	"autoload" : {
 		"psr-4" : {
-			"navatech\\backup\\" : "src"
+			"phuongdev89\\backup\\" : "src"
 		}
 	},
 	"extra" : {
-		"bootstrap" : "navatech\\backup\\Bootstrap"
+		"bootstrap" : "phuongdev89\\backup\\Bootstrap"
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace navatech\backup\models;
+namespace phuongdev89\backup\models;
 
 use yii\db\ActiveRecord;
 use yii\helpers\Json;

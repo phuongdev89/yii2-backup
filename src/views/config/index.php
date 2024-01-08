@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by Navatech.
+ * Created by phuongdev89.
  * @project Default (Template) Project
  * @author  Phuong
  * @email   notteen[at]gmail.com
@@ -14,14 +14,14 @@
 /* @var $directories array */
 
 use kartik\tabs\TabsX;
-use navatech\backup\components\MysqlBackup;
-use navatech\backup\Module;
+use phuongdev89\backup\components\MysqlBackup;
+use phuongdev89\backup\Module;
 
 $this->title                   = 'Backup configure';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
-<div class="navatech-setting">
+<div class="phuongdev89-setting">
 	<div class="box">
 		<!-- /.box-header -->
 		<div class="box-body">

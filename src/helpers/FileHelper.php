@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by Navatech.
+ * Created by phuongdev89.
  * @project yii2-backup
  * @author  Phuong
  * @email   notteen[at]gmail.com
@@ -8,7 +8,7 @@
  * @time    11:49 AM
  */
 
-namespace navatech\backup\helpers;
+namespace phuongdev89\backup\helpers;
 class FileHelper extends \yii\helpers\FileHelper {
 
 	/**

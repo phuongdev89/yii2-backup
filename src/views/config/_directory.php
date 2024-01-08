@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by Navatech.
+ * Created by phuongdev89.
  * @project yii2-backup
  * @author  Phuong
  * @email   notteen[at]gmail.com
@@ -10,8 +10,8 @@
 
 /** @var array $directories */
 
-use navatech\backup\helpers\FileHelper;
-use navatech\backup\models\BackupConfig;
+use phuongdev89\backup\helpers\FileHelper;
+use phuongdev89\backup\models\BackupConfig;
 use yii\bootstrap\ActiveForm;
 use yii\bootstrap\Html;
 

@@ -1,14 +1,14 @@
 <?php
 
-namespace navatech\backup\models\search;
+namespace phuongdev89\backup\models\search;
 
 use kartik\daterange\DateRangeBehavior;
-use navatech\backup\models\BackupHistory;
+use phuongdev89\backup\models\BackupHistory;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 
 /**
- * BackupHistorySearch represents the model behind the search form about `navatech\backup\models\BackupHistorySearch`.
+ * BackupHistorySearch represents the model behind the search form about `phuongdev89\backup\models\BackupHistorySearch`.
  */
 class BackupHistorySearch extends BackupHistory {
 

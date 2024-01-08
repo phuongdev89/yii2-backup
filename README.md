@@ -10,13 +10,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist navatech/yii2-backup "*"
+php composer.phar require --prefer-dist phuongdev89/yii2-backup "*"
 ```
 
 or add
 
 ```
-"navatech/yii2-backup": "*"
+"phuongdev89/yii2-backup": "*"
 ```
 
 to the require section of your `composer.json` file.
@@ -25,7 +25,7 @@ to the require section of your `composer.json` file.
 Migration
 -----
 ```
-php yii migrate --migrationPath=@vendor/navatech/yii2-backup/src/migrations
+php yii migrate --migrationPath=@vendor/phuongdev89/yii2-backup/src/migrations
 ```
 
 Usage
@@ -35,12 +35,12 @@ In console configure:
 ```[php]
 'controllerMap'       => [
     'backup' => [
-        'class' => 'navatech\backup\commands\BackupController',
+        'class' => 'phuongdev89\backup\commands\BackupController',
     ],
 ],
 'modules'             => [
     'backup' => [
-        'class'     => 'navatech\backup\Module',
+        'class'     => 'phuongdev89\backup\Module',
         'databases'     => [
             'db',
             'db1',
@@ -51,10 +51,10 @@ In console configure:
         ],
         'transport' => [
             'mail' => [
-                'class'     => '\navatech\backup\transports\Mail',
+                'class'     => '\phuongdev89\backup\transports\Mail',
             ],
             'ftp'  => [
-                'class'  => '\navatech\backup\transports\Ftp',
+                'class'  => '\phuongdev89\backup\transports\Ftp',
             ],
         ],
     ],

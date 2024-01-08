@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by Navatech.
+ * Created by phuongdev89.
  * @project yii2-backup
  * @author  Phuong
  * @email   notteen[at]gmail.com
@@ -8,7 +8,7 @@
  * @time    9:23 AM
  */
 
-namespace navatech\backup\transports;
+namespace phuongdev89\backup\transports;
 class S3 {
 
 }

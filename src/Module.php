@@ -6,12 +6,12 @@
  * Time: 10:46 AM
  */
 
-namespace navatech\backup;
+namespace phuongdev89\backup;
 
-use navatech\backup\helpers\FileHelper;
-use navatech\backup\models\BackupConfig;
-use navatech\backup\transports\Ftp;
-use navatech\backup\transports\Mail;
+use phuongdev89\backup\helpers\FileHelper;
+use phuongdev89\backup\models\BackupConfig;
+use phuongdev89\backup\transports\Ftp;
+use phuongdev89\backup\transports\Mail;
 use yii\base\ErrorException;
 use yii\console\Application as ConsoleApplication;
 use yii\web\NotFoundHttpException;
@@ -20,7 +20,7 @@ use yii\web\NotFoundHttpException;
  * @property Mail $mail
  * @property Ftp  $ftp
  */
-class Module extends \navatech\base\Module {
+class Module extends \phuongdev89\base\Module {
 
 	const TYPE_DATABASE  = 'database';
 
@@ -30,13 +30,13 @@ class Module extends \navatech\base\Module {
 
 	public $transport    = [
 		'mail' => [
-			'class' => '\navatech\backup\transports\Mail',
+			'class' => '\phuongdev89\backup\transports\Mail',
 		],
 		'ftp'  => [
-			'class' => '\navatech\backup\transports\Ftp',
+			'class' => '\phuongdev89\backup\transports\Ftp',
 		],
 		's3'   => [
-			'class' => '\navatech\backup\transports\S3',
+			'class' => '\phuongdev89\backup\transports\S3',
 		],
 	];
 
@@ -51,9 +51,9 @@ class Module extends \navatech\base\Module {
 	public function init() {
 		parent::init();
 		if (\Yii::$app instanceof ConsoleApplication) {
-			$this->controllerNamespace = 'navatech\backup\commands';
+			$this->controllerNamespace = 'phuongdev89\backup\commands';
 		} else {
-			$this->controllerNamespace = 'navatech\backup\controllers';
+			$this->controllerNamespace = 'phuongdev89\backup\controllers';
 			$this->defaultRoute        = 'history/index';
 		}
 		if (BackupConfig::getCronjob('backupPath') !== false && !file_exists(BackupConfig::getCronjob('backupPath'))) {

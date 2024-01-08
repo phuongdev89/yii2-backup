@@ -6,13 +6,13 @@
  * Time: 9:43 PM
  */
 
-namespace navatech\backup\commands;
+namespace phuongdev89\backup\commands;
 
-use navatech\backup\components\MysqlBackup;
-use navatech\backup\helpers\StringHelper;
-use navatech\backup\models\BackupConfig;
-use navatech\backup\models\BackupHistory;
-use navatech\backup\Module;
+use phuongdev89\backup\components\MysqlBackup;
+use phuongdev89\backup\helpers\StringHelper;
+use phuongdev89\backup\models\BackupConfig;
+use phuongdev89\backup\models\BackupHistory;
+use phuongdev89\backup\Module;
 use PharData;
 use Swift_TransportException;
 use Yii;

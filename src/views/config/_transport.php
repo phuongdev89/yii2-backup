@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by Navatech.
+ * Created by phuongdev89.
  * @project yii2-backup
  * @author  Phuong
  * @email   notteen[at]gmail.com
@@ -10,7 +10,7 @@
 
 /** @var BackupConfig $backupConfig */
 
-use navatech\backup\models\BackupConfig;
+use phuongdev89\backup\models\BackupConfig;
 use yii\bootstrap\ActiveForm;
 use yii\bootstrap\Html;
 
@@ -54,7 +54,7 @@ use yii\bootstrap\Html;
 				</div>
 				<div class="nava-email-manager" style="display:<?= BackupConfig::getTransport('email_system') == BackupConfig::MAIL_SYSTEM_NAVAEMAIL ? 'block' : 'none' ?>;">
 					See
-					<a target="_blank" href="https://github.com/navatech/yii2-email-manager#simple-configuration">yii2-email-manager</a>
+					<a target="_blank" href="https://github.com/phuongdev89/yii2-email-manager#simple-configuration">yii2-email-manager</a>
 				</div>
 			</div>
 		</div>

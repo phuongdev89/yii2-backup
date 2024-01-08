@@ -1,6 +1,6 @@
 <?php
 
-namespace navatech\backup\models;
+namespace phuongdev89\backup\models;
 
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;

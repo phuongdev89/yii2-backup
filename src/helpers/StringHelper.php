@@ -6,7 +6,7 @@
  * Time: 11:05 SA
  */
 
-namespace navatech\backup\helpers;
+namespace phuongdev89\backup\helpers;
 class StringHelper extends \yii\helpers\StringHelper {
 
 	/**

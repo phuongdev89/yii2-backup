@@ -6,9 +6,9 @@
  * Time: 10:17 PM
  */
 
-namespace navatech\backup\transports;
+namespace phuongdev89\backup\transports;
 
-use navatech\backup\models\BackupConfig;
+use phuongdev89\backup\models\BackupConfig;
 use Yii;
 use yii\base\BaseObject;
 use yii\base\ErrorException;
