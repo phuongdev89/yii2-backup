@@ -7,11 +7,16 @@ use phuongdev89\backup\models\BackupConfig;
 use phuongdev89\backup\models\BackupHistory;
 use phuongdev89\backup\models\search\BackupHistorySearch as BackupHistorySearch;
 use phuongdev89\backup\Module;
+use Throwable;
 use Yii;
+use yii\base\Action;
+use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
+use yii\web\BadRequestHttpException;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\Response;
 
 /**
  * Created by PhpStorm.
@@ -19,186 +24,194 @@ use yii\web\NotFoundHttpException;
  * Date: 9/30/16
  * Time: 3:03 PM
  */
-class HistoryController extends Controller {
+class HistoryController extends Controller
+{
 
-	public $menu      = [];
+    public $menu = [];
 
-	public $tables    = [];
+    public $tables = [];
 
-	public $fp;
+    public $fp;
 
-	public $file_name;
+    public $file_name;
 
-	public $enableZip = true;
+    public $enableZip = true;
 
-	/**@var Module */
-	public  $module;
+    /**@var Module */
+    public $module;
 
-	/**
-	 * @param \yii\base\Action $action
-	 *
-	 * @return bool
-	 * @throws \yii\web\BadRequestHttpException
-	 */
-	public function beforeAction($action) {
-		$this->module->clean();
-		return parent::beforeAction($action);
-	}
+    /**
+     * @param Action $action
+     *
+     * @return bool
+     * @throws BadRequestHttpException
+     */
+    public function beforeAction($action)
+    {
+        $this->module->clean();
+        return parent::beforeAction($action);
+    }
 
-	/**
-	 * @return array
-	 */
-	public function behaviors() {
-		return [
-			'access' => [
-				'class' => AccessControl::class,
-				'only'  => [
-					'index',
-					'delete',
-					'download',
-					'restore',
-				],
-				'rules' => [
-					[
-						'actions' => [
-							'index',
-							'delete',
-							'download',
-							'restore',
-						],
-						'allow'   => true,
-						'roles'   => ['@'],
-					],
-				],
-			],
-			'verbs'  => [
-				'class'   => VerbFilter::class,
-				'actions' => [
-					'delete'   => ['post'],
-					'restore'  => ['post'],
-					'download' => ['post'],
-				],
-			],
-		];
-	}
+    /**
+     * @return array
+     */
+    public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::class,
+                'only' => [
+                    'index',
+                    'delete',
+                    'download',
+                    'restore',
+                ],
+                'rules' => [
+                    [
+                        'actions' => [
+                            'index',
+                            'delete',
+                            'download',
+                            'restore',
+                        ],
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
+            'verbs' => [
+                'class' => VerbFilter::class,
+                'actions' => [
+                    'delete' => ['post'],
+                    'restore' => ['post'],
+                    'download' => ['post'],
+                ],
+            ],
+        ];
+    }
 
-	/**
-	 * @param $file
-	 *
-	 * @return mixed
-	 */
-	public function actionRestore($file) {
-		if (strpos(basename($file), Module::TYPE_DIRECTORY) !== false) {
-			Yii::$app->session->setFlash('warning', 'The DIRECTORY backup can not be restored automatically, please download and restore it manual!');
-		} else {
-			ini_set('max_execution_time', 0);
-			$sql         = new MysqlBackup();
-			$backup_file = BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . basename($file);
-			$ext         = pathinfo($backup_file, PATHINFO_EXTENSION);
-			if (in_array($ext, [
-				'zip',
-				'gz',
-				'tar',
-				'gzip',
-				'7z',
-			])) {
-				$force_remove = true;
-			} else {
-				$force_remove = false;
-			}
-			$sql_file = $sql->unzip($backup_file);
-			$message  = $sql->execSqlFile($sql_file, $force_remove);
-			if ($message) {
-				Yii::$app->session->setFlash('success', 'Restored database successfully.');
-			} else {
-				Yii::$app->session->setFlash('error', $message);
-			}
-		}
-		return $this->redirect(['index']);
-	}
+    /**
+     * @param $file
+     *
+     * @return Response
+     */
+    public function actionRestore($file)
+    {
+        if (strpos(basename($file), Module::TYPE_DIRECTORY) !== false) {
+            Yii::$app->session->setFlash('warning', 'The DIRECTORY backup can not be restored automatically, please download and restore it manual!');
+        } else {
+            ini_set('max_execution_time', 0);
+            $sql = new MysqlBackup();
+            $backup_file = BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . basename($file);
+            $ext = pathinfo($backup_file, PATHINFO_EXTENSION);
+            if (in_array($ext, [
+                'zip',
+                'gz',
+                'tar',
+                'gzip',
+                '7z',
+            ])) {
+                $force_remove = true;
+            } else {
+                $force_remove = false;
+            }
+            $sql_file = $sql->unzip($backup_file);
+            $message = $sql->execSqlFile($sql_file, $force_remove);
+            if ($message) {
+                Yii::$app->session->setFlash('success', 'Restored database successfully.');
+            } else {
+                Yii::$app->session->setFlash('error', $message);
+            }
+        }
+        return $this->redirect(['index']);
+    }
 
-	/**
-	 * @param $file
-	 */
-	public function actionDownload($file) {
-		header('Content-Type: application/csv');
-		header('Content-Disposition: attachment; filename=' . basename($file));
-		header('Pragma: no-cache');
-		readfile(BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . basename($file));
-	}
+    /**
+     * @param $file
+     */
+    public function actionDownload($file)
+    {
+        header('Content-Type: application/csv');
+        header('Content-Disposition: attachment; filename=' . basename($file));
+        header('Pragma: no-cache');
+        readfile(BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . basename($file));
+    }
 
-	/**
-	 * Lists all BackupHistorySearch models.
-	 * @return mixed
-	 */
-	public function actionIndex() {
-		$searchModel  = new BackupHistorySearch;
-		$dataProvider = $searchModel->search(Yii::$app->request->getQueryParams());
-		return $this->render('index', [
-			'module'       => $this->module,
-			'dataProvider' => $dataProvider,
-			'searchModel'  => $searchModel,
-			'mysqlBackup'  => new MysqlBackup(),
-		]);
-	}
+    /**
+     * Lists all BackupHistorySearch models.
+     * @return string
+     */
+    public function actionIndex()
+    {
+        $searchModel = new BackupHistorySearch;
+        $dataProvider = $searchModel->search(Yii::$app->request->getQueryParams());
+        return $this->render('index', [
+            'module' => $this->module,
+            'dataProvider' => $dataProvider,
+            'searchModel' => $searchModel,
+        ]);
+    }
 
-	/**
-	 * Creates a new BackupHistorySearch model.
-	 * If creation is successful, the browser will be redirected to the 'view' page.
-	 * @return mixed
-	 */
-	public function actionCreate() {
-		$model = new BackupHistory;
-		if ($model->load(Yii::$app->request->post()) && $model->save()) {
-			return $this->redirect([
-				'view',
-				'id' => $model->id,
-			]);
-		} else {
-			return $this->render('create', [
-				'model' => $model,
-			]);
-		}
-	}
+    /**
+     * Creates a new BackupHistorySearch model.
+     * If creation is successful, the browser will be redirected to the 'view' page.
+     * @return Response|string
+     */
+    public function actionCreate()
+    {
+        $model = new BackupHistory;
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            return $this->redirect([
+                'view',
+                'id' => $model->id,
+            ]);
+        } else {
+            return $this->render('create', [
+                'model' => $model,
+            ]);
+        }
+    }
 
-	/**
-	 * Deletes an existing BackupHistorySearch model.
-	 * If deletion is successful, the browser will be redirected to the 'index' page.
-	 *
-	 * @param integer $id
-	 *
-	 * @return mixed
-	 * @throws NotFoundHttpException
-	 * @throws \Throwable
-	 * @throws \yii\db\StaleObjectException
-	 */
-	public function actionDelete($id) {
-		$model   = $this->findModel($id);
-		$sqlFile = Yii::getAlias(BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . basename($model->name));
-		if (file_exists($sqlFile)) {
-			unlink($sqlFile);
-			Yii::$app->session->setFlash('success', 'File was deleted');
-		} else {
-			Yii::$app->session->setFlash('error', 'File not found');
-		}
-		$model->delete();
-		return $this->redirect(['index']);
-	}
+    /**
+     * Deletes an existing BackupHistorySearch model.
+     * If deletion is successful, the browser will be redirected to the 'index' page.
+     *
+     * @param integer $id
+     *
+     * @return Response
+     * @throws NotFoundHttpException
+     * @throws Throwable
+     * @throws StaleObjectException
+     */
+    public function actionDelete($id)
+    {
+        $model = $this->findModel($id);
+        $sqlFile = Yii::getAlias(BackupConfig::getCronjob('backupPath') . DIRECTORY_SEPARATOR . basename($model->name));
+        if (file_exists($sqlFile)) {
+            unlink($sqlFile);
+            Yii::$app->session->setFlash('success', 'File was deleted');
+        } else {
+            Yii::$app->session->setFlash('error', 'File not found');
+        }
+        $model->delete();
+        return $this->redirect(['index']);
+    }
 
-	/**
-	 * Finds the BackupHistorySearch model based on its primary key value.
-	 * If the model is not found, a 404 HTTP exception will be thrown.
-	 *
-	 * @param integer $id
-	 *
-	 * @return BackupHistory the loaded model
-	 * @throws NotFoundHttpException if the model cannot be found
-	 */
-	protected function findModel($id) {
-		if (($model = BackupHistory::findOne($id)) !== null) {
-			return $model;
-		} else {
-			throw new NotFoundHttpException('The requested page does not exist.');
-		}
-	}
+    /**
+     * Finds the BackupHistorySearch model based on its primary key value.
+     * If the model is not found, a 404 HTTP exception will be thrown.
+     *
+     * @param integer $id
+     *
+     * @return BackupHistory the loaded model
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    protected function findModel($id)
+    {
+        if (($model = BackupHistory::findOne($id)) !== null) {
+            return $model;
+        } else {
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+    }
 }

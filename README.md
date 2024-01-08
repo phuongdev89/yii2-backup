@@ -24,14 +24,21 @@ to the require section of your `composer.json` file.
 
 Migration
 -----
+
 ```
 php yii migrate --migrationPath=@vendor/phuongdev89/yii2-backup/src/migrations
 ```
 
 Usage
 -----
+First, go to web:
+
+```
+http://localhost/index.php?r=backup/config
+```
 
 In console configure:
+
 ```[php]
 'controllerMap'       => [
     'backup' => [
@@ -60,10 +67,14 @@ In console configure:
     ],
 ]
 ```
+
 How to use in command line:
+
 ```
 php yii help backup
 ```
 
 ####Notice:
-* Make sure [yii\swiftmailer\Mailer](http://www.yiiframework.com/doc-2.0/yii-swiftmailer-mailer.html) has been configured or backed up files can't be send through mail.
+
+* Make sure [yii\swiftmailer\Mailer](http://www.yiiframework.com/doc-2.0/yii-swiftmailer-mailer.html) has been
+  configured or backed up files can't be send through mail.
